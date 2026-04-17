@@ -1,40 +1,45 @@
 import fp from "fastify-plugin";
+import { Contract, JsonRpcProvider, WebSocketProvider } from "ethers";
 import { listenToEvents } from "../contract/services/Eventlistener.js";
-import { Contract, WebSocketProvider } from "ethers";
-import { JsonRpcProvider } from "ethers";
 import { MarketplaceContractConfig } from "../contract/marketPlace.js";
 
 const ethersPlugin = fp(async function (fastify, opts) {
-    try {
-        let provider;
-        if (opts.rpcUrl.startsWith("ws://") || opts.rpcUrl.startsWith("wss://") || opts.rpcUrl === "http://127.0.0.1:8545") {
-            provider = new WebSocketProvider(opts.rpcUrl);
-        } else {
-            provider = new JsonRpcProvider(opts.rpcUrl);
-        }
+  try {
+    const rpcUrl = opts.rpcUrl;
 
-        // Verify connection
-        await provider.getBlockNumber();
-
-        const contract = new Contract(
-            ...MarketplaceContractConfig,
-            provider
-        );
-
-        fastify.decorate("ethers", { provider, contract });
-
-        listenToEvents(fastify);
-
-        fastify.log.info("Ethers provider connected");
-
-        fastify.addHook("onClose", async () => {
-            if (provider.destroy) {
-                provider.destroy();
-            }
-        });
-    } catch (err) {
-        fastify.close();
+    if (!rpcUrl) {
+      throw new Error("RPC_URL is missing in backend/.env");
     }
+
+    const isWebSocketUrl =
+      rpcUrl.startsWith("ws://") || rpcUrl.startsWith("wss://");
+
+    const provider = isWebSocketUrl
+      ? new WebSocketProvider(rpcUrl)
+      : new JsonRpcProvider(rpcUrl);
+
+    await provider.getBlockNumber();
+
+    const contract = new Contract(
+      ...MarketplaceContractConfig,
+      provider
+    );
+
+    fastify.decorate("ethers", { provider, contract });
+
+    listenToEvents(fastify);
+
+    fastify.log.info("Ethers provider connected");
+
+    fastify.addHook("onClose", async () => {
+      if (typeof provider.destroy === "function") {
+        provider.destroy();
+      }
+    });
+  } catch (error) {
+    fastify.log.error("Failed to connect ethers provider:", error);
+    fastify.close();
+  }
 });
 
 export default ethersPlugin;
