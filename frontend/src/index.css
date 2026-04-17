@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  background-color: #151418;
+  color: rgba(255, 255, 255, 0.87);
+  color-scheme: light dark;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  font-weight: 400;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@layer utilities {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    @apply appearance-none m-0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+.input-field {
+  @apply w-full 
+    rounded-xl 
+    bg-neutral-900 
+    border 
+    border-neutral-700 
+    px-4 
+    py-3 
+    text-base 
+    text-white 
+    placeholder:text-gray-500
+    focus:outline-none 
+    focus:ring-2 
+    focus:ring-emerald-500 
+    focus:border-emerald-500 
+    transition;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 6s ease infinite;
+}
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

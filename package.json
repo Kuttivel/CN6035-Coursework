@@ -1,0 +1,26 @@
+{
+  "name": "rowmart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "contract:run": "cd ./contracts && npx hardhat node",
+    "contract:deploy": "cd ./contracts && npx hardhat ignition deploy ./ignition/modules/MarketPlace.ts --network localhost",
+    "contract:mint": "cd ./contracts && npx hardhat run ./scripts/mintMNEE.ts --network localhost",
+    "dev:server": "cd ./backend && npm run dev",
+    "dev:client": "cd ./frontend && npm run dev",
+    "server": "cd ./backend && npm start",
+    "build": "cd ./frontend && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoldenThrust/rowmart.git"
+  },
+  "author": "Adeniji Olajide",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GoldenThrust/rowmart/issues"
+  },
+  "homepage": "https://github.com/GoldenThrust/rowmart#readme"
+}
