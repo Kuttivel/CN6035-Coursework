@@ -5,6 +5,7 @@ import { useConnection } from "wagmi";
 import toast from "react-hot-toast";
 import useCreateTransaction from "../../contracts/hooks/useCreateTransaction";
 import { eventBus } from "../../lib/eventBus";
+import resolveProductImage from "../../utils/resolveProductImage";
 
 /* --------------------------- Component --------------------------- */
 
@@ -159,7 +160,7 @@ export default function DisplayProducts({ query }: { query: string | null }) {
                 onClick={() => setSelectedProduct(product)}
               >
                 <img
-                  src={`https://ipfs.io/ipfs/${product.imageCid}`}
+                  src={resolveProductImage(product)}
                   alt={product.name}
                   className="h-full w-full object-cover group-hover:scale-105 transition"
                 />

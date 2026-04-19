@@ -4,6 +4,7 @@ export const productProperties = {
   _id: { type: "string" },
   imageId: { type: "string" },
   imageCid: { type: "string" },
+  imageUrl: { type: "string" },
   name: { type: "string" },
   email: { type: "string", format: "email" },
   price: { type: "number", minimum: 0 },

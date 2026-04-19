@@ -5,6 +5,7 @@ import { useConnection } from "wagmi";
 import useConfirmDelivery from "../../contracts/hooks/useConfirmDelivery";
 import toast from "react-hot-toast";
 import useCreateDispute from "../../contracts/hooks/useCreateDispute";
+import resolveProductImage from "../../utils/resolveProductImage";
 
 // TODO: Change Pagination to scroll
 /* ---------------------------- Helpers ---------------------------- */
@@ -248,7 +249,7 @@ export default function Orders({
               >
                 {/* Image */}
                 <img
-                  src={`https://ipfs.io/ipfs/${order.product.imageCid}`}
+                  src={resolveProductImage(order.product)}
                   alt={order.product.name}
                   className="w-20 h-20 rounded-lg object-cover border border-neutral-800"
                 />

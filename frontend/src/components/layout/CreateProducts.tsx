@@ -75,10 +75,12 @@ export default function CreateProduct({
         setCreateProductSeccessful(false);
       }
     } catch (err: any) {
-      toast.error("Listing failed", {
-        id: "create-product",
-      });
-    }
+        const message = err?.response?.data?.message || err?.message || "Listing failed";
+
+        toast.error(message, {
+          id: "create-product",
+        });
+      }
   }
 
   return (

@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import useCreateReview from "../../contracts/hooks/useCreateReview";
 import { useConnection } from "wagmi";
 import useReadBalance from "../../contracts/hooks/useReadBalance";
+import resolveProductImage from "../../utils/resolveProductImage";
 
 /* ----------------------------- Types ----------------------------- */
 export default function ProductDetails({
@@ -106,7 +107,7 @@ export default function ProductDetails({
           {/* Left: Scrollable product info */}
           <div className="flex-1 p-6 md:max-h-[80vh] space-y-4">
             <img
-              src={`https://ipfs.io/ipfs/${product.imageCid}`}
+              src={resolveProductImage(product)}
               alt={product.name}
               className="w-full h-72 object-cover rounded-xl"
             />
