@@ -26,51 +26,56 @@ export function listenToEvents(fastify) {
         return;
       }
 
-      await mailservice.sendProductCreationMail(
-        product.email,
-        seller,
-        product
-      );
+      try {
+        await mailservice.sendProductCreationMail(
+          product.email,
+          seller,
+          product
+        );
+      } catch (mailError) {
+        fastify.log.error("ProductCreated mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling ProductCreated event:", error);
       console.error("Error handling ProductCreated event:", error);
     }
   });
 
-  contract.on("ProductPurchased", async (productId, txnId, uri) => {
-    console.log("ProductPurchased event detected:", { productId, txnId, uri });
+contract.on("ProductPurchased", async (productId, txnId, uri) => {
+  console.log("ProductPurchased event detected:", { productId, txnId, uri });
+
+  try {
+    const product = await Product.findOne({
+      productId: productId.toString(),
+    });
+
+    if (!product) {
+      fastify.log.error(
+        `ProductPurchased sync failed: no product found for productId ${productId.toString()}`
+      );
+      return;
+    }
+
+    const transaction = await Transaction.findOneAndUpdate(
+      {
+        product: product._id,
+        detailsCid: uri,
+      },
+      {
+        transactionId: txnId.toString(),
+        success: true,
+      },
+      { new: true }
+    ).populate("product");
+
+    if (!transaction) {
+      fastify.log.error(
+        `ProductPurchased sync failed: no transaction found for productId ${productId.toString()} and detailsCid ${uri}`
+      );
+      return;
+    }
 
     try {
-      const product = await Product.findOne({
-        productId: productId.toString(),
-      });
-
-      if (!product) {
-        fastify.log.error(
-          `ProductPurchased sync failed: no product found for productId ${productId.toString()}`
-        );
-        return;
-      }
-
-      const transaction = await Transaction.findOneAndUpdate(
-        {
-          product,
-          detailsCid: uri,
-        },
-        {
-          transactionId: txnId.toString(),
-          success: true,
-        },
-        { new: true }
-      );
-
-      if (!transaction) {
-        fastify.log.error(
-          `ProductPurchased sync failed: no transaction found for txnId ${txnId.toString()}`
-        );
-        return;
-      }
-
       await mailservice.sendBuyerPurchaseMail(
         transaction.buyerEmail,
         product.email,
@@ -86,11 +91,14 @@ export function listenToEvents(fastify) {
         transaction.quantity,
         transaction.price * transaction.quantity
       );
-    } catch (error) {
-      fastify.log.error("Error handling ProductPurchased event:", error);
-      console.error("Error handling ProductPurchased event:", error);
+    } catch (mailError) {
+      fastify.log.error("ProductPurchased mail failed:", mailError);
     }
-  });
+  } catch (error) {
+    fastify.log.error("Error handling ProductPurchased event:", error);
+    console.error("Error handling ProductPurchased event:", error);
+  }
+});
 
   contract.on("TransactionCompleted", async (txnId) => {
     console.log("TransactionCompleted event detected:", { txnId });
@@ -110,10 +118,14 @@ export function listenToEvents(fastify) {
       transaction.status = "completed";
       await transaction.save();
 
-      await mailservice.sendSellerTransactionCompletionMail(
-        transaction.product.email,
-        transaction
-      );
+      try {
+        await mailservice.sendSellerTransactionCompletionMail(
+          transaction.product.email,
+          transaction
+        );
+      } catch (mailError) {
+        fastify.log.error("TransactionCompleted mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling TransactionCompleted event:", error);
       console.error("Error handling TransactionCompleted event:", error);
@@ -138,10 +150,14 @@ export function listenToEvents(fastify) {
       transaction.status = "refunded";
       await transaction.save();
 
-      await mailservice.sendBuyerTransactionRefundedMail(
-        transaction.buyerEmail,
-        transaction
-      );
+      try {
+        await mailservice.sendBuyerTransactionRefundedMail(
+          transaction.buyerEmail,
+          transaction
+        );
+      } catch (mailError) {
+        fastify.log.error("TransactionRefunded mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling TransactionRefunded event:", error);
       console.error("Error handling TransactionRefunded event:", error);
@@ -166,15 +182,19 @@ export function listenToEvents(fastify) {
       transaction.status = "disputed";
       await transaction.save();
 
-      await mailservice.sendBuyerDisputeOpenedMail(
-        transaction.buyerEmail,
-        transaction
-      );
+      try {
+        await mailservice.sendBuyerDisputeOpenedMail(
+          transaction.buyerEmail,
+          transaction
+        );
 
-      await mailservice.sendSellerDisputeOpenedMail(
-        transaction.product.email,
-        transaction
-      );
+        await mailservice.sendSellerDisputeOpenedMail(
+          transaction.product.email,
+          transaction
+        );
+      } catch (mailError) {
+        fastify.log.error("DisputeOpened mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling DisputeOpened event:", error);
       console.error("Error handling DisputeOpened event:", error);
@@ -196,17 +216,21 @@ export function listenToEvents(fastify) {
         return;
       }
 
-      await mailservice.sendBuyerDisputeResolvedMail(
-        transaction.buyerEmail,
-        transaction,
-        buyerWon
-      );
+      try {
+        await mailservice.sendBuyerDisputeResolvedMail(
+          transaction.buyerEmail,
+          transaction,
+          buyerWon
+        );
 
-      await mailservice.sendSellerDisputeResolvedMail(
-        transaction.product.email,
-        transaction,
-        buyerWon
-      );
+        await mailservice.sendSellerDisputeResolvedMail(
+          transaction.product.email,
+          transaction,
+          buyerWon
+        );
+      } catch (mailError) {
+        fastify.log.error("DisputeResolved mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling DisputeResolved event:", error);
       console.error("Error handling DisputeResolved event:", error);
@@ -228,11 +252,15 @@ export function listenToEvents(fastify) {
         return;
       }
 
-      await mailservice.sendSellerReviewNotificationMail(
-        product.email,
-        product,
-        reviewer
-      );
+      try {
+        await mailservice.sendSellerReviewNotificationMail(
+          product.email,
+          product,
+          reviewer
+        );
+      } catch (mailError) {
+        fastify.log.error("ReviewSubmitted mail failed:", mailError);
+      }
     } catch (error) {
       fastify.log.error("Error handling ReviewSubmitted event:", error);
       console.error("Error handling ReviewSubmitted event:", error);

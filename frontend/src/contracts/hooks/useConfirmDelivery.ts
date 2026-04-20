@@ -4,26 +4,26 @@ import {
 } from "wagmi";
 import { MarketplaceContractConfig } from "../marketPlace";
 
-
 export default function useConfirmDelivery() {
   const {
     data: hash,
     error,
     isPending,
-    mutateAsync: writeContractAsync,
+    writeContractAsync,
   } = useWriteContract();
-
 
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
 
   const confirmDelivery = async (txnId: string) => {
-    await writeContractAsync({
+    const txHash = await writeContractAsync({
       ...MarketplaceContractConfig,
       functionName: "confirmDelivery",
       args: [BigInt(txnId)],
     });
+
+    return txHash;
   };
 
   return {

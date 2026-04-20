@@ -1,7 +1,7 @@
 import axios from "axios";
 import { X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useConnection } from "wagmi";
+import { useAccount } from "wagmi";
 import useConfirmDelivery from "../../contracts/hooks/useConfirmDelivery";
 import toast from "react-hot-toast";
 import useCreateDispute from "../../contracts/hooks/useCreateDispute";
@@ -34,7 +34,7 @@ export default function Orders({
 }: {
   setOpenOrderOverlay: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { address } = useConnection();
+  const { address } = useAccount();
 
   const [isSeller, setIsSeller] = useState<boolean | null>(null);
   const [status, setStatus] = useState<OrderStatus>("all");
@@ -53,41 +53,49 @@ export default function Orders({
   /* ---------------------- Confirm Delivery ----------------------- */
   async function deliveryConfirmation(order: Order) {
     if (!address) return;
-    if (order.buyer !== address) return;
+    if (order.buyer.toLowerCase() !== address.toLowerCase()) return;
     if (order.status !== "pending") return;
 
     const confirmed = confirm("Confirm you have received this product?");
     if (!confirmed) return;
 
     try {
-      toast.loading("Confirming delivery......", {
+      setConfirmingId(order._id);
+
+      toast.loading("Confirming delivery...", {
         id: "delivery-confirmation",
       });
-      await axios.put("/update-transaction", {
-        id: order._id,
-        status: "completed",
+
+      await confirmDelivery(order.transactionId);
+
+      toast.success("Delivery transaction submitted", {
+        id: "delivery-confirmation",
       });
 
-      try {
-        setConfirmingId(order._id);
-        await confirmDelivery(order.transactionId);
+      // Refresh orders after short delay so backend event can update MongoDB
+      setTimeout(async () => {
+        try {
+          const res = await axios.get("/get-transactions", {
+            params: {
+              success: true,
+              address,
+              isSeller,
+              status: status === "all" ? undefined : status,
+              page: pagination.page,
+            },
+          });
 
-        setOrders((prev) =>
-          prev.map((o) =>
-            o._id === order._id ? { ...o, status: "completed" } : o
-          )
-        );
-
-        toast.success("Delivery confirmed", {
-          id: "delivery-confirmation",
-        });
-      } catch (err) {
-        await axios.put("/update-transactions", {
-          id: order._id,
-          status: "pending",
-        });
-        throw err;
-      }
+          setOrders(res.data.transactions);
+          setPagination((p: PaginationMeta) => ({
+            ...p,
+            page: res.data.meta.page,
+            totalPages: res.data.meta.totalPages,
+            total: res.data.meta.total,
+          }));
+        } catch (error) {
+          console.error("Failed to refresh orders", error);
+        }
+      }, 2000);
     } catch (err) {
       console.error("Confirm delivery failed", err);
       toast.error("Delivery confirmation failed", {
@@ -98,18 +106,40 @@ export default function Orders({
     }
   }
 
-  // TODO: use backend Event to update Dispute details, rating and review instead of using. axios
-
   async function openDispute(order: Order) {
     try {
       setDisputingId(order._id);
       toast.loading("Creating dispute...", { id: "dispute" });
-      try {
-        await createDispute(order.transactionId);
-        toast.success("Dispute Opened!", { id: "dispute" });
-      } catch (error) {
-        throw error;
-      }
+
+      await createDispute(order.transactionId);
+
+      toast.success("Dispute opened!", { id: "dispute" });
+
+      setTimeout(async () => {
+        if (!address) return;
+
+        try {
+          const res = await axios.get("/get-transactions", {
+            params: {
+              success: true,
+              address,
+              isSeller,
+              status: status === "all" ? undefined : status,
+              page: pagination.page,
+            },
+          });
+
+          setOrders(res.data.transactions);
+          setPagination((p: PaginationMeta) => ({
+            ...p,
+            page: res.data.meta.page,
+            totalPages: res.data.meta.totalPages,
+            total: res.data.meta.total,
+          }));
+        } catch (error) {
+          console.error("Failed to refresh orders", error);
+        }
+      }, 2000);
     } catch (err) {
       console.error(err);
       toast.error("Failed to create dispute", { id: "dispute" });
@@ -130,7 +160,7 @@ export default function Orders({
         const res = await axios.get("/get-transactions", {
           params: {
             success: true,
-            address,
+            address: address.toLowerCase(),
             isSeller,
             status: status === "all" ? undefined : status,
             page: pagination.page,
@@ -163,18 +193,14 @@ export default function Orders({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div className="relative bg-neutral-950 md:w-140 w-full max-h-[90vh] rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
-        {/* Close */}
         <X
           className="absolute right-5 top-5 cursor-pointer text-red-500"
           onClick={() => setOpenOrderOverlay(false)}
         />
 
-        {/* Header */}
         <h2 className="text-lg font-semibold">My Orders</h2>
 
-        {/* Filters */}
         <div className="flex flex-col gap-4">
-          {/* Status Filter */}
           <div className="space-y-2">
             <p className="text-xs text-neutral-500">Status</p>
             <div className="flex gap-2 text-xs flex-wrap">
@@ -202,7 +228,6 @@ export default function Orders({
             </div>
           </div>
 
-          {/* Buy / Sell Filter */}
           <div className="flex justify-end gap-2 text-xs">
             <span className="text-neutral-500 mr-2">View</span>
             <button
@@ -228,7 +253,6 @@ export default function Orders({
           </div>
         </div>
 
-        {/* Orders List */}
         <div className="flex flex-col gap-3 overflow-y-auto pr-1">
           {loading && (
             <p className="text-sm text-neutral-400">Loading orders…</p>
@@ -239,7 +263,9 @@ export default function Orders({
           )}
 
           {orders.map((order) => {
-            const isSellOrder = address === order.seller;
+            const isSellOrder =
+              !!address && address.toLowerCase() === order.seller.toLowerCase();
+
             const total = order.quantity * Number(order.price);
 
             return (
@@ -247,16 +273,13 @@ export default function Orders({
                 key={order._id}
                 className="flex gap-4 border border-neutral-800 rounded-xl p-4 bg-neutral-900 hover:border-neutral-700 transition"
               >
-                {/* Image */}
                 <img
                   src={resolveProductImage(order.product)}
                   alt={order.product.name}
                   className="w-20 h-20 rounded-lg object-cover border border-neutral-800"
                 />
 
-                {/* Content */}
                 <div className="flex-1 flex flex-col gap-2">
-                  {/* Header */}
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium">{order.product.name}</p>
@@ -274,7 +297,6 @@ export default function Orders({
                     </span>
                   </div>
 
-                  {/* Pricing */}
                   <div className="grid grid-cols-2 gap-y-1 text-xs text-neutral-400">
                     <p>Type</p>
                     <p className="text-right">
@@ -294,8 +316,8 @@ export default function Orders({
                       {total.toLocaleString()} MNEE
                     </p>
                   </div>
+
                   <div className="mt-3 flex gap-2">
-                    {/* Confirm Delivery */}
                     {!isSellOrder && order.status === "pending" && (
                       <button
                         onClick={() => deliveryConfirmation(order)}
@@ -309,6 +331,7 @@ export default function Orders({
                           : "Confirm Delivery"}
                       </button>
                     )}
+
                     {order.status === "pending" && (
                       <button
                         onClick={() => openDispute(order)}
@@ -324,7 +347,6 @@ export default function Orders({
                     )}
                   </div>
 
-                  {/* Addresses */}
                   <div className="flex justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800">
                     <p>
                       {isSellOrder ? "Buyer" : "Seller"}:{" "}
@@ -335,7 +357,6 @@ export default function Orders({
                     <p>Tx #{order.transactionId}</p>
                   </div>
 
-                  {/* Time */}
                   <p className="text-[11px] text-neutral-600 text-right">
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
@@ -345,7 +366,6 @@ export default function Orders({
           })}
         </div>
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-center gap-4 pt-4 border-t border-neutral-800">
             <button
@@ -357,7 +377,7 @@ export default function Orders({
                 }))
               }
               className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-        disabled:opacity-40 hover:border-neutral-500"
+              disabled:opacity-40 hover:border-neutral-500"
             >
               Previous
             </button>
@@ -377,7 +397,7 @@ export default function Orders({
                 }))
               }
               className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-        disabled:opacity-40 hover:border-neutral-500"
+              disabled:opacity-40 hover:border-neutral-500"
             >
               Next
             </button>

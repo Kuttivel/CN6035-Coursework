@@ -68,7 +68,6 @@ function getErrorMessage(error) {
 export default async function productRoutes(fastify) {
   const { pinata } = fastify;
 
-  // ---------------- CREATE PRODUCT ----------------
   fastify.post(
     "/create-product",
     {
@@ -131,7 +130,6 @@ export default async function productRoutes(fastify) {
     }
   );
 
-  // ---------------- UPDATE PRODUCT ----------------
   fastify.put(
     "/update-product",
     { schema: updateProductSchema },
@@ -148,9 +146,7 @@ export default async function productRoutes(fastify) {
         const updatedProduct = await Product.findByIdAndUpdate(
           id,
           updatedFields,
-          {
-            new: true,
-          }
+          { new: true }
         );
 
         return reply.send({ success: true, product: updatedProduct });
@@ -161,7 +157,6 @@ export default async function productRoutes(fastify) {
     }
   );
 
-  // ---------------- GET PRODUCTS WITH PAGINATION ----------------
   fastify.get(
     "/get-products",
     { schema: getProductsSchema },
@@ -206,7 +201,6 @@ export default async function productRoutes(fastify) {
     }
   );
 
-  // ---------------- GET SINGLE PRODUCT ----------------
   fastify.get(
     "/get-product",
     { schema: getProductSchema },
@@ -225,7 +219,6 @@ export default async function productRoutes(fastify) {
     }
   );
 
-  // ---------------- DELETE PRODUCT ----------------
   fastify.delete(
     "/delete-product",
     { schema: deleteProductSchema },
@@ -261,7 +254,6 @@ export default async function productRoutes(fastify) {
     }
   );
 
-  // ---------------- RATE PRODUCT ----------------
   fastify.put(
     "/rate-product/:id",
     { schema: rateProductSchema },
