@@ -127,9 +127,12 @@ export default function DisplayProducts({ query }: { query: string | null }) {
     } catch (err: any) {
       setDisableSubmit(false);
 
-      toast.error(err?.response?.data?.message ?? err?.message ?? "Transaction failed", {
-        id: "buy-product",
-      });
+      toast.error(
+        err?.response?.data?.message ?? err?.message ?? "Transaction failed",
+        {
+          id: "buy-product",
+        }
+      );
     }
   };
 

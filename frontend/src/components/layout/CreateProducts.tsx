@@ -75,13 +75,15 @@ export default function CreateProduct({
         setCreateProductSeccessful(false);
       }
     } catch (err: any) {
-        const message = err?.response?.data?.message || err?.message || "Listing failed";
-
-        toast.error(message, {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Listing failed",
+        {
           id: "create-product",
-        });
-      }
+        }
+      );
+    }
   }
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">

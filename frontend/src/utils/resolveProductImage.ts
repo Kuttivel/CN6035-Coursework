@@ -14,5 +14,9 @@ export default function resolveProductImage(product: {
     return product.imageCid;
   }
 
+  if (product.imageCid.startsWith("local://")) {
+    return product.imageUrl || "";
+  }
+
   return `https://ipfs.io/ipfs/${product.imageCid}`;
 }

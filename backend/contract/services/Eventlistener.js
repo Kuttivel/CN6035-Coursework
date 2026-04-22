@@ -41,64 +41,64 @@ export function listenToEvents(fastify) {
     }
   });
 
-contract.on("ProductPurchased", async (productId, txnId, uri) => {
-  console.log("ProductPurchased event detected:", { productId, txnId, uri });
-
-  try {
-    const product = await Product.findOne({
-      productId: productId.toString(),
-    });
-
-    if (!product) {
-      fastify.log.error(
-        `ProductPurchased sync failed: no product found for productId ${productId.toString()}`
-      );
-      return;
-    }
-
-    const transaction = await Transaction.findOneAndUpdate(
-      {
-        product: product._id,
-        detailsCid: uri,
-      },
-      {
-        transactionId: txnId.toString(),
-        success: true,
-      },
-      { new: true }
-    ).populate("product");
-
-    if (!transaction) {
-      fastify.log.error(
-        `ProductPurchased sync failed: no transaction found for productId ${productId.toString()} and detailsCid ${uri}`
-      );
-      return;
-    }
+  contract.on("ProductPurchased", async (productId, txnId, uri) => {
+    console.log("ProductPurchased event detected:", { productId, txnId, uri });
 
     try {
-      await mailservice.sendBuyerPurchaseMail(
-        transaction.buyerEmail,
-        product.email,
-        product,
-        transaction.quantity,
-        transaction.price * transaction.quantity
-      );
+      const product = await Product.findOne({
+        productId: productId.toString(),
+      });
 
-      await mailservice.sendSellerPurchaseMail(
-        product.email,
-        transaction.buyerEmail,
-        product,
-        transaction.quantity,
-        transaction.price * transaction.quantity
-      );
-    } catch (mailError) {
-      fastify.log.error("ProductPurchased mail failed:", mailError);
+      if (!product) {
+        fastify.log.error(
+          `ProductPurchased sync failed: no product found for productId ${productId.toString()}`
+        );
+        return;
+      }
+
+      const transaction = await Transaction.findOneAndUpdate(
+        {
+          product: product._id,
+          detailsCid: uri,
+        },
+        {
+          transactionId: txnId.toString(),
+          success: true,
+        },
+        { new: true }
+      ).populate("product");
+
+      if (!transaction) {
+        fastify.log.error(
+          `ProductPurchased sync failed: no transaction found for productId ${productId.toString()} and detailsCid ${uri}`
+        );
+        return;
+      }
+
+      try {
+        await mailservice.sendBuyerPurchaseMail(
+          transaction.buyerEmail,
+          product.email,
+          product,
+          transaction.quantity,
+          transaction.price * transaction.quantity
+        );
+
+        await mailservice.sendSellerPurchaseMail(
+          product.email,
+          transaction.buyerEmail,
+          product,
+          transaction.quantity,
+          transaction.price * transaction.quantity
+        );
+      } catch (mailError) {
+        fastify.log.error("ProductPurchased mail failed:", mailError);
+      }
+    } catch (error) {
+      fastify.log.error("Error handling ProductPurchased event:", error);
+      console.error("Error handling ProductPurchased event:", error);
     }
-  } catch (error) {
-    fastify.log.error("Error handling ProductPurchased event:", error);
-    console.error("Error handling ProductPurchased event:", error);
-  }
-});
+  });
 
   contract.on("TransactionCompleted", async (txnId) => {
     console.log("TransactionCompleted event detected:", { txnId });
@@ -128,7 +128,6 @@ contract.on("ProductPurchased", async (productId, txnId, uri) => {
       }
     } catch (error) {
       fastify.log.error("Error handling TransactionCompleted event:", error);
-      console.error("Error handling TransactionCompleted event:", error);
     }
   });
 
@@ -160,7 +159,6 @@ contract.on("ProductPurchased", async (productId, txnId, uri) => {
       }
     } catch (error) {
       fastify.log.error("Error handling TransactionRefunded event:", error);
-      console.error("Error handling TransactionRefunded event:", error);
     }
   });
 
@@ -197,7 +195,6 @@ contract.on("ProductPurchased", async (productId, txnId, uri) => {
       }
     } catch (error) {
       fastify.log.error("Error handling DisputeOpened event:", error);
-      console.error("Error handling DisputeOpened event:", error);
     }
   });
 
@@ -233,7 +230,6 @@ contract.on("ProductPurchased", async (productId, txnId, uri) => {
       }
     } catch (error) {
       fastify.log.error("Error handling DisputeResolved event:", error);
-      console.error("Error handling DisputeResolved event:", error);
     }
   });
 
@@ -263,7 +259,6 @@ contract.on("ProductPurchased", async (productId, txnId, uri) => {
       }
     } catch (error) {
       fastify.log.error("Error handling ReviewSubmitted event:", error);
-      console.error("Error handling ReviewSubmitted event:", error);
     }
   });
 }
