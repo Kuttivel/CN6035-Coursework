@@ -4,17 +4,18 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 import { darkTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import App from "./App.tsx";
-import { config } from "./wagmi.ts";
 import { Toaster } from "react-hot-toast";
 import axios from "axios";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+import App from "./App.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
+import { Error404 } from "./Error404.tsx";
+import { config } from "./wagmi.ts";
 import "./index.css";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Error404 } from "./Error404.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <Dashboard />,
+    errorElement: <Error404 />,
   },
 ]);
 

@@ -1,32 +1,86 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAccount } from "wagmi";
+
+import CreateProduct from "../components/layout/CreateProducts";
+import Orders from "../components/layout/Orders";
+import SellerAnalytics from "../components/layout/SellerAnalytics";
+import { AccountConnectButton } from "../components/ui/ConnectButton";
+import useReadBalance from "../contracts/hooks/useReadBalance";
+
 export default function Dashboard() {
+  const { isConnected } = useAccount();
+  const [openOrderOverlay, setOpenOrderOverlay] = useState(false);
+  const [openListingForm, setOpenListingForm] = useState(false);
+
+  const readBalance = useReadBalance();
+
   return (
-    <div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-neutral-950 text-neutral-100">
-      {/* Background glow */}
-      <div className="absolute inset-0">
-        <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-yellow-500/20 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <header className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="RowMart" className="w-8 h-8" />
+            <div>
+              <h1 className="text-xl font-semibold">Seller Dashboard</h1>
+              <p className="text-xs text-neutral-400">
+                Manage products, orders, and analytics
+              </p>
+            </div>
+          </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center px-6">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-          <span className="bg-linear-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent animate-gradient">
-            Dashboard
-          </span>
-          <br />
-          <span className="text-neutral-400">Coming Soon</span>
-        </h1>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="px-4 py-2 rounded-lg border border-neutral-800 hover:border-neutral-700 transition text-sm"
+            >
+              Marketplace
+            </Link>
 
-        <p className="mt-6 max-w-xl mx-auto text-neutral-400 text-base md:text-lg">
-          We're building a powerful dashboard experience to help you manage
-          everything in one place. Stay tuned.
-        </p>
+            <button
+              onClick={() => setOpenOrderOverlay(true)}
+              className="px-4 py-2 rounded-lg border border-neutral-800 hover:border-neutral-700 transition text-sm"
+            >
+              My Orders
+            </button>
 
-        <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-5 py-2 text-sm text-neutral-300">
-          <span className="inline-block h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-          In active development
+            <button
+              onClick={() => setOpenListingForm(true)}
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition text-sm font-medium"
+            >
+              Quick Sell
+            </button>
+
+            <AccountConnectButton readBalance={readBalance} />
+          </div>
         </div>
-      </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {!isConnected ? (
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-8 text-center">
+            <h2 className="text-xl font-semibold">Connect your wallet</h2>
+            <p className="mt-2 text-sm text-neutral-400">
+              Please connect your wallet to access seller tools.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
+            <SellerAnalytics />
+          </div>
+        )}
+      </main>
+
+      {openOrderOverlay && (
+        <Orders setOpenOrderOverlay={setOpenOrderOverlay} />
+      )}
+
+      {openListingForm && (
+        <CreateProduct
+          setOpenListingForm={setOpenListingForm}
+          readBalance={readBalance}
+        />
+      )}
     </div>
   );
 }
