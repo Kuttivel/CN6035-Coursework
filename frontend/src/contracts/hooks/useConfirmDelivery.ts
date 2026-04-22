@@ -2,12 +2,8 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { MarketplaceContractConfig } from "../marketPlace";
 
 export default function useConfirmDelivery() {
-  const {
-    data: hash,
-    error,
-    isPending,
-    writeContractAsync,
-  } = useWriteContract();
+  const { data: hash, error, isPending, writeContractAsync } =
+    useWriteContract();
 
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({
     hash,

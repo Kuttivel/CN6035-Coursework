@@ -15,7 +15,11 @@ export default function DisplayProducts({ query }: { query: string | null }) {
   const [disableSubmit, setDisableSubmit] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [createTransactionSeccessful, setCreateTransactionSeccessful] =
-    useState(false);
+    useState<boolean | null>(null);
+  const [pendingTransactionId, setPendingTransactionId] = useState<
+    string | null
+  >(null);
+
   const [pagination, setPagination] = useState<PaginationMeta>({
     page: 1,
     totalPages: 1,
@@ -61,10 +65,12 @@ export default function DisplayProducts({ query }: { query: string | null }) {
   }, [query]);
 
   useEffect(() => {
-    if (disableSubmit === false) return;
+    if (!disableSubmit) return;
+    if (createTransactionSeccessful === null) return;
 
     if (createTransactionSeccessful) {
       toast.success("Purchase successful", { id: "buy-product" });
+
       setTimeout(() => {
         fetchProducts();
       }, 2000);
@@ -76,8 +82,21 @@ export default function DisplayProducts({ query }: { query: string | null }) {
 
     setDisableSubmit(false);
     setSelectedProduct(null);
-    setCreateTransactionSeccessful(false);
+    setPendingTransactionId(null);
+    setCreateTransactionSeccessful(null);
   }, [createTransactionSeccessful, disableSubmit, fetchProducts]);
+
+  const rollbackPendingTransaction = async (transactionId?: string | null) => {
+    if (!transactionId) return;
+
+    try {
+      await axios.delete("/delete-transaction", {
+        data: { id: transactionId },
+      });
+    } catch (error) {
+      console.error("Failed to rollback pending transaction", error);
+    }
+  };
 
   const buyProduct = async (
     product: Product,
@@ -95,8 +114,12 @@ export default function DisplayProducts({ query }: { query: string | null }) {
       return;
     }
 
+    let createdTransactionId: string | null = null;
+
     try {
       setDisableSubmit(true);
+      setCreateTransactionSeccessful(null);
+      setPendingTransactionId(null);
 
       toast.loading("Processing transaction...", { id: "buy-product" });
 
@@ -111,7 +134,9 @@ export default function DisplayProducts({ query }: { query: string | null }) {
 
       localStorage.setItem("user-email", buyerEmail);
 
-      const { detailsCid } = res.data.transaction;
+      const { detailsCid, _id } = res.data.transaction;
+      createdTransactionId = _id;
+      setPendingTransactionId(_id);
 
       if (!product.productId || Number(product.productId) <= 0) {
         throw new Error("Invalid productId");
@@ -125,7 +150,11 @@ export default function DisplayProducts({ query }: { query: string | null }) {
         setCreateTransactionSeccessful
       );
     } catch (err: any) {
+      await rollbackPendingTransaction(createdTransactionId);
+
       setDisableSubmit(false);
+      setPendingTransactionId(null);
+      setCreateTransactionSeccessful(null);
 
       toast.error(
         err?.response?.data?.message ?? err?.message ?? "Transaction failed",

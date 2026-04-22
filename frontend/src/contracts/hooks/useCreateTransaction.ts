@@ -24,10 +24,10 @@ export default function useCreateTransaction() {
     productId: bigint,
     quantity: number,
     metadataCID: string,
-    price: string,
-    setCreateTransactionSeccessful: Dispatch<SetStateAction<boolean>>
+    totalPrice: string,
+    setCreateTransactionSeccessful: Dispatch<SetStateAction<boolean | null>>
   ) => {
-    const allowanceAmount = parseUnits(price, decimals);
+    const allowanceAmount = parseUnits(totalPrice, decimals);
     const { sufficient } = await checkAllowance(allowanceAmount);
 
     const createTransaction = async () => {
@@ -37,6 +37,7 @@ export default function useCreateTransaction() {
           functionName: "buyProduct",
           args: [productId, quantity, metadataCID],
         });
+
         setCreateTransactionSeccessful(true);
       } catch {
         setCreateTransactionSeccessful(false);
@@ -44,13 +45,17 @@ export default function useCreateTransaction() {
     };
 
     if (!sufficient) {
-      await writeContractAsync({
-        ...MNEEContractConfig,
-        functionName: "approve",
-        args: [MarketplaceContractConfig.address, allowanceAmount],
-      });
+      try {
+        await writeContractAsync({
+          ...MNEEContractConfig,
+          functionName: "approve",
+          args: [MarketplaceContractConfig.address, allowanceAmount],
+        });
 
-      enqueue(createTransaction);
+        enqueue(createTransaction);
+      } catch {
+        setCreateTransactionSeccessful(false);
+      }
     } else {
       await createTransaction();
     }

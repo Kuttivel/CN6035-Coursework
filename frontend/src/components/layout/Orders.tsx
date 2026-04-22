@@ -107,6 +107,7 @@ export default function Orders({
     if (!address) return;
     if (order.buyer.toLowerCase() !== address.toLowerCase()) return;
     if (order.status !== "pending") return;
+    if (disputingId === order._id || refundingId === order._id) return;
 
     const confirmed = confirm("Confirm you have received this product?");
     if (!confirmed) return;
@@ -140,6 +141,7 @@ export default function Orders({
   async function openDispute(order: Order) {
     if (!address) return;
     if (order.status !== "pending") return;
+    if (confirmingId === order._id || refundingId === order._id) return;
 
     const currentUser = address.toLowerCase();
     const canDispute =
@@ -178,6 +180,7 @@ export default function Orders({
     if (!address) return;
     if (order.seller.toLowerCase() !== address.toLowerCase()) return;
     if (order.status !== "pending") return;
+    if (confirmingId === order._id || disputingId === order._id) return;
 
     const confirmed = confirm("Refund this pending order to the buyer?");
     if (!confirmed) return;
@@ -285,6 +288,10 @@ export default function Orders({
               !!address && address.toLowerCase() === order.seller.toLowerCase();
 
             const total = order.quantity * Number(order.price);
+            const isBusy =
+              confirmingId === order._id ||
+              disputingId === order._id ||
+              refundingId === order._id;
 
             return (
               <div
@@ -337,44 +344,38 @@ export default function Orders({
 
                   <div className="mt-3 flex gap-2">
                     {!isSellOrder && order.status === "pending" && (
-                      <button
-                        onClick={() => deliveryConfirmation(order)}
-                        disabled={confirmingId === order._id}
-                        className="flex-1 py-2 text-xs font-semibold rounded-lg
-                        bg-emerald-600/20 text-emerald-400 border border-emerald-600/40
-                        hover:bg-emerald-600/30 disabled:opacity-50"
-                      >
-                        {confirmingId === order._id
-                          ? "Confirming Delivery..."
-                          : "Confirm Delivery"}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => deliveryConfirmation(order)}
+                          disabled={isBusy}
+                          className="flex-1 py-2 text-xs font-semibold rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 hover:bg-emerald-600/30 disabled:opacity-50"
+                        >
+                          {confirmingId === order._id
+                            ? "Confirming Delivery..."
+                            : "Confirm Delivery"}
+                        </button>
+
+                        <button
+                          onClick={() => openDispute(order)}
+                          disabled={isBusy}
+                          className="flex-1 py-2 text-xs font-semibold rounded-lg bg-purple-600/20 text-purple-400 border border-purple-600/40 hover:bg-purple-600/30 disabled:opacity-50"
+                        >
+                          {disputingId === order._id
+                            ? "Opening..."
+                            : "Open Dispute"}
+                        </button>
+                      </>
                     )}
 
                     {isSellOrder && order.status === "pending" && (
                       <button
                         onClick={() => refundPendingOrder(order)}
-                        disabled={refundingId === order._id}
-                        className="flex-1 py-2 text-xs font-semibold rounded-lg
-                        bg-red-600/20 text-red-400 border border-red-600/40
-                        hover:bg-red-600/30 disabled:opacity-50"
+                        disabled={isBusy}
+                        className="flex-1 py-2 text-xs font-semibold rounded-lg bg-red-600/20 text-red-400 border border-red-600/40 hover:bg-red-600/30 disabled:opacity-50"
                       >
                         {refundingId === order._id
                           ? "Refunding..."
                           : "Refund Buyer"}
-                      </button>
-                    )}
-
-                    {order.status === "pending" && (
-                      <button
-                        onClick={() => openDispute(order)}
-                        disabled={disputingId === order._id}
-                        className="flex-1 py-2 text-xs font-semibold rounded-lg
-                        bg-purple-600/20 text-purple-400 border border-purple-600/40
-                        hover:bg-purple-600/30 disabled:opacity-50"
-                      >
-                        {disputingId === order._id
-                          ? "Opening..."
-                          : "Open Dispute"}
                       </button>
                     )}
                   </div>
@@ -408,8 +409,7 @@ export default function Orders({
                   page: Math.max(p.page - 1, 1),
                 }))
               }
-              className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-              disabled:opacity-40 hover:border-neutral-500"
+              className="px-4 py-2 text-xs rounded-lg border border-neutral-700 disabled:opacity-40 hover:border-neutral-500"
             >
               Previous
             </button>
@@ -428,8 +428,7 @@ export default function Orders({
                   page: Math.min(p.page + 1, p.totalPages),
                 }))
               }
-              className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-              disabled:opacity-40 hover:border-neutral-500"
+              className="px-4 py-2 text-xs rounded-lg border border-neutral-700 disabled:opacity-40 hover:border-neutral-500"
             >
               Next
             </button>
