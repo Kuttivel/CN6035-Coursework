@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useConnection, useReadContract } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { MNEEContractConfig } from "../mnee";
 import { MarketplaceContractConfig } from "../marketPlace";
 
@@ -11,7 +11,7 @@ interface AllowanceResponse {
 }
 
 export function useAllowance() {
-  const { address } = useConnection();
+  const { address } = useAccount();
 
   const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
     ...MNEEContractConfig,

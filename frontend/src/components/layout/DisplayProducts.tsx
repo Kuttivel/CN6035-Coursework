@@ -1,16 +1,14 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
-import ProductDetails from "../ui/ProductDetails";
-import { useConnection } from "wagmi";
+import { useCallback, useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import toast from "react-hot-toast";
+import ProductDetails from "../ui/ProductDetails";
 import useCreateTransaction from "../../contracts/hooks/useCreateTransaction";
 import { eventBus } from "../../lib/eventBus";
 import resolveProductImage from "../../utils/resolveProductImage";
 
-/* --------------------------- Component --------------------------- */
-
 export default function DisplayProducts({ query }: { query: string | null }) {
-  const { address } = useConnection();
+  const { address } = useAccount();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -26,32 +24,37 @@ export default function DisplayProducts({ query }: { query: string | null }) {
 
   const { approveAndBuy, isPending } = useCreateTransaction();
 
-  function fetchProducts() {
-    axios
-      .get("/get-products", {
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await axios.get("/get-products", {
         params: {
           active: true,
           search: query ?? undefined,
           page: pagination.page,
         },
-      })
-      .then((res) => {
-        setProducts(res.data.products);
-        setPagination((p: PaginationMeta) => ({
-          ...p,
-          page: res.data.meta.page,
-          totalPages: res.data.meta.totalPages,
-          total: res.data.meta.total,
-        }));
-      })
-      .catch((err) => console.error("Error fetching products:", err));
-  }
+      });
 
-  /* ------------------------- Fetch Products ------------------------ */
+      setProducts(res.data.products);
+      setPagination((p: PaginationMeta) => ({
+        ...p,
+        page: res.data.meta.page,
+        totalPages: res.data.meta.totalPages,
+        total: res.data.meta.total,
+      }));
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    }
+  }, [query, pagination.page]);
 
   useEffect(() => {
     fetchProducts();
-  }, [query, pagination.page]);
+
+    const interval = setInterval(() => {
+      fetchProducts();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [fetchProducts]);
 
   useEffect(() => {
     setPagination((p) => ({ ...p, page: 1 }));
@@ -62,20 +65,19 @@ export default function DisplayProducts({ query }: { query: string | null }) {
 
     if (createTransactionSeccessful) {
       toast.success("Purchase successful", { id: "buy-product" });
+      setTimeout(() => {
+        fetchProducts();
+      }, 2000);
     } else {
       toast.error("Blockchain transaction failed", {
         id: "buy-product",
       });
     }
+
     setDisableSubmit(false);
     setSelectedProduct(null);
     setCreateTransactionSeccessful(false);
-  }, [createTransactionSeccessful]);
-
-  useEffect(() => {
-    console.log(document.body.scrollHeight);
-  }, [document.body.scrollHeight]);
-  /* --------------------------- Buy Flow --------------------------- */
+  }, [createTransactionSeccessful, disableSubmit, fetchProducts]);
 
   const buyProduct = async (
     product: Product,
@@ -83,7 +85,12 @@ export default function DisplayProducts({ query }: { query: string | null }) {
     buyerEmail: string,
     price: number
   ) => {
-    if (address === product.seller) {
+    if (!address) {
+      toast.error("Wallet not connected");
+      return;
+    }
+
+    if (address.toLowerCase() === product.seller.toLowerCase()) {
       toast("You can't buy your own product");
       return;
     }
@@ -91,11 +98,11 @@ export default function DisplayProducts({ query }: { query: string | null }) {
     try {
       setDisableSubmit(true);
 
-      toast.loading("Processing transaction…", { id: "buy-product" });
+      toast.loading("Processing transaction...", { id: "buy-product" });
 
       const res = await axios.post("/create-transaction", {
         productId: product._id,
-        price: product.price,
+        price: Number(product.price),
         quantity,
         seller: product.seller,
         buyer: address,
@@ -106,47 +113,44 @@ export default function DisplayProducts({ query }: { query: string | null }) {
 
       const { detailsCid } = res.data.transaction;
 
-      try {
-        if (!product.productId || Number(product.productId) <= 0) {
-          throw new Error("Invalid productId");
-        }
-
-        await approveAndBuy(
-          BigInt(product.productId),
-          quantity,
-          detailsCid,
-          price.toString(),
-          setCreateTransactionSeccessful
-        );
-      } catch (_) {
-        setCreateTransactionSeccessful(false);
+      if (!product.productId || Number(product.productId) <= 0) {
+        throw new Error("Invalid productId");
       }
+
+      await approveAndBuy(
+        BigInt(product.productId),
+        quantity,
+        detailsCid,
+        price.toString(),
+        setCreateTransactionSeccessful
+      );
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Transaction failed", {
+      setDisableSubmit(false);
+
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Transaction failed", {
         id: "buy-product",
       });
     }
   };
-
-  /* ----------------------- Persist Email -------------------------- */
 
   useEffect(() => {
     setUserEmail(localStorage.getItem("user-email") ?? "");
   }, []);
 
   useEffect(() => {
-    eventBus.on("FETCH_PRODUCTS", fetchProducts);
+    const handleFetchProducts = () => {
+      fetchProducts();
+    };
+
+    eventBus.on("FETCH_PRODUCTS", handleFetchProducts);
 
     return () => {
-      eventBus.on("FETCH_PRODUCTS", fetchProducts);
+      eventBus.off("FETCH_PRODUCTS", handleFetchProducts);
     };
-  }, []);
-
-  /* ----------------------------- UI ------------------------------ */
+  }, [fetchProducts]);
 
   return (
     <div className="relative">
-      {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
         {products.length > 0 ? (
           products.map((product) => (
@@ -154,7 +158,6 @@ export default function DisplayProducts({ query }: { query: string | null }) {
               key={product._id}
               className="group bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-600 hover:shadow-xl transition cursor-pointer"
             >
-              {/* Image */}
               <div
                 className="relative h-48 overflow-hidden"
                 onClick={() => setSelectedProduct(product)}
@@ -166,7 +169,6 @@ export default function DisplayProducts({ query }: { query: string | null }) {
                 />
               </div>
 
-              {/* Content */}
               <div className="p-4 flex flex-col gap-3">
                 <div>
                   <h3 className="font-medium text-sm truncate">
@@ -204,8 +206,7 @@ export default function DisplayProducts({ query }: { query: string | null }) {
                 page: Math.max(p.page - 1, 1),
               }))
             }
-            className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-        disabled:opacity-40"
+            className="px-4 py-2 text-xs rounded-lg border border-neutral-700 disabled:opacity-40"
           >
             Previous
           </button>
@@ -223,15 +224,13 @@ export default function DisplayProducts({ query }: { query: string | null }) {
                 page: Math.min(p.page + 1, p.totalPages),
               }))
             }
-            className="px-4 py-2 text-xs rounded-lg border border-neutral-700
-        disabled:opacity-40"
+            className="px-4 py-2 text-xs rounded-lg border border-neutral-700 disabled:opacity-40"
           >
             Next
           </button>
         </div>
       )}
 
-      {/* Product Modal */}
       {selectedProduct && (
         <ProductDetails
           setSelectedProduct={setSelectedProduct}

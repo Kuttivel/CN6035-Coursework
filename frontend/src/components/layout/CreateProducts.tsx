@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import useCreateProduct from "../../contracts/hooks/useCreateProduct";
 import useReadBalance from "../../contracts/hooks/useReadBalance";
-import { useConnection } from "wagmi";
+import { useAccount } from "wagmi";
 
 export default function CreateProduct({
   setOpenListingForm,
@@ -13,7 +13,7 @@ export default function CreateProduct({
   setOpenListingForm: Dispatch<SetStateAction<boolean>>;
   readBalance: ReturnType<typeof useReadBalance>;
 }) {
-  const { address } = useConnection();
+  const { address } = useAccount();
 
   const [userEmail, setUserEmail] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);

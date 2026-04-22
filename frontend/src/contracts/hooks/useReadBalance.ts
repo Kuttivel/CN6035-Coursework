@@ -1,10 +1,10 @@
-import { useBalance, useConnection, useReadContract } from "wagmi";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { MNEEContractConfig } from "../mnee";
 import { formatUnits } from "viem";
 import { useTokenDetails } from "./useTokenDetails";
 
 export default function useReadBalance() {
-  const { address } = useConnection();
+  const { address } = useAccount();
   const { data: ethBalance, refetch: refetchEthBalance } = useBalance({
     address,
   });

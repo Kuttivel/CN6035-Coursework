@@ -1,4 +1,4 @@
-import { useConnect, useConnection } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import CreateProduct from "./components/layout/CreateProducts";
@@ -29,7 +29,7 @@ async function wakeServer(setServerActive: Dispatch<SetStateAction<boolean>>) {
 }
 
 function App() {
-  const { address, isConnected } = useConnection();
+  const { address, isConnected } = useAccount();
   const { error } = useConnect();
 
   const [openListingForm, setOpenListingForm] = useState(false);

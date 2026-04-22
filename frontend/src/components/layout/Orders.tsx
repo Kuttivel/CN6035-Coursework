@@ -1,14 +1,19 @@
 import axios from "axios";
 import { X } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useAccount } from "wagmi";
-import useConfirmDelivery from "../../contracts/hooks/useConfirmDelivery";
 import toast from "react-hot-toast";
+import useConfirmDelivery from "../../contracts/hooks/useConfirmDelivery";
 import useCreateDispute from "../../contracts/hooks/useCreateDispute";
+import useRefundTransaction from "../../contracts/hooks/useRefundTransaction";
 import resolveProductImage from "../../utils/resolveProductImage";
 
-// TODO: Change Pagination to scroll
-/* ---------------------------- Helpers ---------------------------- */
 const shortAddress = (addr?: string) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
@@ -27,8 +32,6 @@ const statusColor = (status: string) => {
   }
 };
 
-/* --------------------------- Component --------------------------- */
-
 export default function Orders({
   setOpenOrderOverlay,
 }: {
@@ -36,21 +39,70 @@ export default function Orders({
 }) {
   const { address } = useAccount();
 
-  const [isSeller, setIsSeller] = useState<boolean | null>(null);
+  const [isSeller, setIsSeller] = useState<boolean | null>(false);
   const [status, setStatus] = useState<OrderStatus>("all");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [confirmingId, setConfirmingId] = useState<string>("");
   const [disputingId, setDisputingId] = useState<string>("");
-  const { createDispute } = useCreateDispute();
+  const [refundingId, setRefundingId] = useState<string>("");
+
   const { confirmDelivery } = useConfirmDelivery();
+  const { createDispute } = useCreateDispute();
+  const { refundTransaction } = useRefundTransaction();
+
   const [pagination, setPagination] = useState<PaginationMeta>({
     page: 1,
     totalPages: 1,
     total: 0,
   });
 
-  /* ---------------------- Confirm Delivery ----------------------- */
+  const fetchOrders = useCallback(async () => {
+    if (!address) return;
+
+    try {
+      setLoading(true);
+
+      const res = await axios.get("/get-transactions", {
+        params: {
+          success: true,
+          address: address.toLowerCase(),
+          isSeller,
+          status: status === "all" ? undefined : status,
+          page: pagination.page,
+        },
+      });
+
+      setOrders(res.data.transactions);
+      setPagination((p: PaginationMeta) => ({
+        ...p,
+        page: res.data.meta.page,
+        totalPages: res.data.meta.totalPages,
+        total: res.data.meta.total,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch orders", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [address, isSeller, status, pagination.page]);
+
+  useEffect(() => {
+    if (!address) return;
+
+    fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [fetchOrders, address]);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, page: 1 }));
+  }, [status, isSeller]);
+
   async function deliveryConfirmation(order: Order) {
     if (!address) return;
     if (order.buyer.toLowerCase() !== address.toLowerCase()) return;
@@ -72,29 +124,8 @@ export default function Orders({
         id: "delivery-confirmation",
       });
 
-      // Refresh orders after short delay so backend event can update MongoDB
-      setTimeout(async () => {
-        try {
-          const res = await axios.get("/get-transactions", {
-            params: {
-              success: true,
-              address,
-              isSeller,
-              status: status === "all" ? undefined : status,
-              page: pagination.page,
-            },
-          });
-
-          setOrders(res.data.transactions);
-          setPagination((p: PaginationMeta) => ({
-            ...p,
-            page: res.data.meta.page,
-            totalPages: res.data.meta.totalPages,
-            total: res.data.meta.total,
-          }));
-        } catch (error) {
-          console.error("Failed to refresh orders", error);
-        }
+      setTimeout(() => {
+        fetchOrders();
       }, 2000);
     } catch (err) {
       console.error("Confirm delivery failed", err);
@@ -107,88 +138,75 @@ export default function Orders({
   }
 
   async function openDispute(order: Order) {
+    if (!address) return;
+    if (order.status !== "pending") return;
+
+    const currentUser = address.toLowerCase();
+    const canDispute =
+      order.buyer.toLowerCase() === currentUser ||
+      order.seller.toLowerCase() === currentUser;
+
+    if (!canDispute) return;
+
     try {
       setDisputingId(order._id);
-      toast.loading("Creating dispute...", { id: "dispute" });
+
+      toast.loading("Creating dispute...", {
+        id: "dispute",
+      });
 
       await createDispute(order.transactionId);
 
-      toast.success("Dispute opened!", { id: "dispute" });
+      toast.success("Dispute opened!", {
+        id: "dispute",
+      });
 
-      setTimeout(async () => {
-        if (!address) return;
-
-        try {
-          const res = await axios.get("/get-transactions", {
-            params: {
-              success: true,
-              address,
-              isSeller,
-              status: status === "all" ? undefined : status,
-              page: pagination.page,
-            },
-          });
-
-          setOrders(res.data.transactions);
-          setPagination((p: PaginationMeta) => ({
-            ...p,
-            page: res.data.meta.page,
-            totalPages: res.data.meta.totalPages,
-            total: res.data.meta.total,
-          }));
-        } catch (error) {
-          console.error("Failed to refresh orders", error);
-        }
+      setTimeout(() => {
+        fetchOrders();
       }, 2000);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to create dispute", { id: "dispute" });
+      console.error("Failed to create dispute", err);
+      toast.error("Failed to create dispute", {
+        id: "dispute",
+      });
     } finally {
       setDisputingId("");
     }
   }
 
-  /* ------------------------- Fetch Orders ------------------------ */
-
-  useEffect(() => {
+  async function refundPendingOrder(order: Order) {
     if (!address) return;
+    if (order.seller.toLowerCase() !== address.toLowerCase()) return;
+    if (order.status !== "pending") return;
 
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
+    const confirmed = confirm("Refund this pending order to the buyer?");
+    if (!confirmed) return;
 
-        const res = await axios.get("/get-transactions", {
-          params: {
-            success: true,
-            address: address.toLowerCase(),
-            isSeller,
-            status: status === "all" ? undefined : status,
-            page: pagination.page,
-          },
-        });
+    try {
+      setRefundingId(order._id);
 
-        setOrders(res.data.transactions);
-        setPagination((p: PaginationMeta) => ({
-          ...p,
-          page: res.data.meta.page,
-          totalPages: res.data.meta.totalPages,
-          total: res.data.meta.total,
-        }));
-      } catch (error) {
-        console.error("Failed to fetch orders", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      toast.loading("Refunding order...", {
+        id: "refund-order",
+      });
 
-    fetchOrders();
-  }, [address, isSeller, status, pagination.page]);
+      await refundTransaction(order.transactionId);
 
-  useEffect(() => {
-    setPagination((p) => ({ ...p, page: 1 }));
-  }, [status, isSeller]);
+      toast.success("Refund transaction submitted", {
+        id: "refund-order",
+      });
 
-  /* ----------------------------- UI ------------------------------ */
+      setTimeout(() => {
+        fetchOrders();
+      }, 2000);
+    } catch (err) {
+      console.error("Refund failed", err);
+      toast.error("Refund failed", {
+        id: "refund-order",
+      });
+    } finally {
+      setRefundingId("");
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
@@ -255,7 +273,7 @@ export default function Orders({
 
         <div className="flex flex-col gap-3 overflow-y-auto pr-1">
           {loading && (
-            <p className="text-sm text-neutral-400">Loading orders…</p>
+            <p className="text-sm text-neutral-400">Loading orders...</p>
           )}
 
           {!loading && orders.length === 0 && (
@@ -329,6 +347,20 @@ export default function Orders({
                         {confirmingId === order._id
                           ? "Confirming Delivery..."
                           : "Confirm Delivery"}
+                      </button>
+                    )}
+
+                    {isSellOrder && order.status === "pending" && (
+                      <button
+                        onClick={() => refundPendingOrder(order)}
+                        disabled={refundingId === order._id}
+                        className="flex-1 py-2 text-xs font-semibold rounded-lg
+                        bg-red-600/20 text-red-400 border border-red-600/40
+                        hover:bg-red-600/30 disabled:opacity-50"
+                      >
+                        {refundingId === order._id
+                          ? "Refunding..."
+                          : "Refund Buyer"}
                       </button>
                     )}
 

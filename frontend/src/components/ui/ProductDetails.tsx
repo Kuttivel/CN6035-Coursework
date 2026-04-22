@@ -11,7 +11,7 @@ import {
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import useCreateReview from "../../contracts/hooks/useCreateReview";
-import { useConnection } from "wagmi";
+import { useAccount } from "wagmi";
 import useReadBalance from "../../contracts/hooks/useReadBalance";
 import resolveProductImage from "../../utils/resolveProductImage";
 
@@ -34,7 +34,7 @@ export default function ProductDetails({
   ) => void;
   defaultEmail: string;
 }) {
-  const { address } = useConnection();
+  const { address } = useAccount();
   const [quantity, setQuantity] = useState(1);
   const [email, setEmail] = useState(defaultEmail);
 
