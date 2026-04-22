@@ -1,20 +1,30 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChevronDown } from "lucide-react";
 import { formatUnits } from "viem";
-import { useConnection } from "wagmi";
-
+import { useAccount } from "wagmi";
 import { useTokenDetails } from "../../contracts/hooks/useTokenDetails";
 import useReadBalance from "../../contracts/hooks/useReadBalance";
 import { formatNumber } from "../../utils";
-import { useEffect, useState } from "react";
-
-/* --------------------------- Component --------------------------- */
 
 export const AccountConnectButton = ({
   readBalance,
 }: {
   readBalance: ReturnType<typeof useReadBalance>;
 }) => {
+  const { connector } = useAccount();
+  const { symbol } = useTokenDetails();
+  const { balance, formatedBalance, ethBalance } = readBalance;
+
+  const icon = connector?.icon;
+  const rkDetails = connector?.rkDetails as IconConfig | undefined;
+
+  const displayBalance =
+    balance !== undefined
+      ? `${formatNumber(formatedBalance)} ${symbol}`
+      : `${formatNumber(
+          formatUnits(ethBalance?.value ?? 0n, ethBalance?.decimals ?? 18)
+        )} ${ethBalance?.symbol ?? "ETH"}`;
+
   return (
     <ConnectButton.Custom>
       {({
@@ -33,45 +43,6 @@ export const AccountConnectButton = ({
           chain &&
           (!authenticationStatus || authenticationStatus === "authenticated");
 
-        const { balance, formatedBalance, ethBalance } = readBalance;
-        const { symbol } = useTokenDetails();
-        const { connector } = useConnection();
-        const icon = connector?.icon;
-        const rkDetails = connector?.rkDetails as IconConfig;
-
-        const [iconDetails, setIconDetails] = useState<IconState>({
-          iconAccent: "#000",
-          iconBackground: "#fdc700",
-          icon: icon ?? "",
-        });
-
-        useEffect(() => {
-          if (!rkDetails?.iconUrl) {
-            setIconDetails((state) => ({
-              ...state,
-              icon: icon ?? "",
-            }));
-            return;
-          }
-
-          rkDetails.iconUrl().then((resolvedIcon) => {
-            console.log(resolvedIcon);
-            setIconDetails((state) => ({
-              ...state,
-              iconAccent: rkDetails.iconAccent,
-              iconBackground: rkDetails.iconBackground,
-              icon: resolvedIcon,
-            }));
-          });
-        }, [rkDetails, icon]);
-
-        const displayBalance =
-          balance !== undefined
-            ? `${formatNumber(formatedBalance)} ${symbol}`
-            : `${formatNumber(
-                formatUnits(ethBalance?.value ?? 0n, ethBalance?.decimals ?? 18)
-              )} ${ethBalance?.symbol ?? "ETH"}`;
-
         return (
           <div
             className="flex justify-center"
@@ -84,91 +55,54 @@ export const AccountConnectButton = ({
               },
             })}
           >
-            {/* Not connected */}
             {!connected && (
               <button
                 onClick={openConnectModal}
                 className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                type="button"
               >
                 Connect Wallet
               </button>
             )}
 
-            {/* Wrong network */}
-            {connected && chain?.unsupported && (
+            {connected && chain.unsupported && (
               <button
                 onClick={openChainModal}
-                className="bg-red-600/20 border border-red-600/40 text-red-400 px-4 py-2 rounded-lg text-sm font-semibold"
+                className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                type="button"
               >
-                Wrong Network
+                Wrong network
               </button>
             )}
 
-            {/* Connected */}
-            {connected && !chain?.unsupported && (
-              <div className="flex items-center gap-2 text-sm">
-                {/* Chain */}
+            {connected && !chain.unsupported && (
+              <div className="flex items-center gap-2">
                 <button
                   onClick={openChainModal}
-                  className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-2 rounded-lg transition"
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
                 >
-                  {chain.hasIcon && (
-                    <div
-                      className="w-5 h-5 rounded-full overflow-hidden"
-                      style={{ background: chain.iconBackground }}
-                    >
-                      {chain.iconUrl && (
-                        <img
-                          src={chain.iconUrl}
-                          alt={chain.name}
-                          className="w-full h-full"
-                        />
-                      )}
-                    </div>
-                  )}
-                  <span className="hidden sm:inline">{chain.name}</span>
-                  <ChevronDown size={14} />
+                  {icon ? (
+                    <img
+                      src={icon}
+                      alt={chain.name ?? "Wallet"}
+                      className="h-4 w-4 rounded-full"
+                    />
+                  ) : null}
+                  <span>{chain.name}</span>
+                  <ChevronDown className="h-4 w-4" />
                 </button>
 
-                {/* Account */}
                 <button
                   onClick={openAccountModal}
-                  className="flex items-center gap-3 bg-neutral-900 border border-neutral-800 hover:border-neutral-600 px-3 py-2 rounded-lg transition"
+                  type="button"
+                  className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
                 >
-                  {/* Balance */}
-                  <span className="text-neutral-300 whitespace-nowrap">
-                    {displayBalance}
-                  </span>
-
-                  {/* Avatar */}
-                  <div className="flex items-center gap-2 bg-neutral-800 px-3 py-1 rounded-lg">
-                    {account.ensAvatar ? (
-                      <img
-                        src={account.ensAvatar}
-                        alt="avatar"
-                        className="w-5 h-5 rounded-full"
-                      />
-                    ) : (
-                      <div
-                        className="w-5 h-5 rounded-full overflow-hidden"
-                        style={{
-                          backgroundColor: iconDetails.iconBackground,
-                        }}
-                      >
-                        {iconDetails.icon && (
-                          <img
-                            src={iconDetails.icon}
-                            alt="wallet"
-                            className="w-full h-full"
-                          />
-                        )}
-                      </div>
-                    )}
-
-                    <span className="max-w-20 truncate">
-                      {account.displayName}
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">{account.displayName}</span>
+                    <span className="text-xs text-neutral-400">
+                      {displayBalance}
                     </span>
-                    <ChevronDown size={14} />
                   </div>
                 </button>
               </div>

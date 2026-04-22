@@ -1,79 +1,63 @@
-import {
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { MarketplaceContractConfig } from "../marketPlace";
 import { MNEEContractConfig } from "../mnee";
-import { formatUnits, parseUnits } from "viem";
 import { useTokenDetails } from "./useTokenDetails";
+import { formatUnits } from "viem";
 import { useAllowance } from "./useAllowance";
 import { useTaskQueue } from "../../store/useTaskQueue";
 import { Dispatch, SetStateAction } from "react";
 
-// TODO: estimate gas price to decide if user can pay and approve transaction
 export default function useCreateProduct() {
-  const {
-    data: hash,
-    error,
-    isPending,
-    mutateAsync: writeContractAsync,
-  } = useWriteContract();
   const { enqueue } = useTaskQueue();
-  const { decimals } = useTokenDetails();
+
+  const { data: hash, error, isPending, writeContractAsync } =
+    useWriteContract();
 
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
 
-  const { data: createProductFee } = useReadContract({
-    ...MarketplaceContractConfig,
-    functionName: "createProductFee",
-  });
-
+  const { decimals = 18 } = useTokenDetails();
   const { checkAllowance } = useAllowance();
+
+  const createProductFee = 10n * 10n ** BigInt(decimals);
 
   const approveAndCreate = async (
     price: string,
     metadataCID: string,
     setCreateProductSeccessful: Dispatch<SetStateAction<boolean>>
   ) => {
-    if (!createProductFee) throw new Error("Fee not loaded");
-    const { sufficient } = await checkAllowance(createProductFee ?? BigInt(0));
+    const { sufficient } = await checkAllowance(createProductFee);
 
     const createProduct = async () => {
       try {
         await writeContractAsync({
           ...MarketplaceContractConfig,
           functionName: "createProduct",
-          args: [parseUnits(price, decimals!), metadataCID],
+          args: [BigInt(Number(price) * 10 ** decimals), metadataCID],
         });
         setCreateProductSeccessful(true);
-      } catch (_) {
+      } catch {
         setCreateProductSeccessful(false);
       }
     };
 
     if (!sufficient) {
-      // 1️⃣ Approve MNEE
       await writeContractAsync({
         ...MNEEContractConfig,
         functionName: "approve",
         args: [MarketplaceContractConfig.address, createProductFee],
       });
-      // 2️⃣ Create Product
+
       enqueue(createProduct);
     } else {
-      createProduct();
+      await createProduct();
     }
   };
 
   return {
     approveAndCreate,
-    createProductFee: formatUnits(
-      BigInt(createProductFee ?? 0),
-      decimals ?? 18
-    ),
+    createProductFee: formatUnits(createProductFee, decimals ?? 18),
     isPending,
     isLoading,
     isSuccess,

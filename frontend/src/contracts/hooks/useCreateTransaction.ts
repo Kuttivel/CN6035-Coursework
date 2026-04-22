@@ -7,23 +7,17 @@ import { useAllowance } from "./useAllowance";
 import { useTaskQueue } from "../../store/useTaskQueue";
 import { Dispatch, SetStateAction } from "react";
 
-// TODO: estimate gas price to decide if user can pay and approve transaction
 export default function useCreateTransaction() {
   const { enqueue } = useTaskQueue();
 
-  const {
-    data: hash,
-    error,
-    isPending,
-    mutateAsync: writeContractAsync,
-  } = useWriteContract();
+  const { data: hash, error, isPending, writeContractAsync } =
+    useWriteContract();
 
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
 
   const { decimals = 18 } = useTokenDetails();
-
   const { checkAllowance } = useAllowance();
 
   const approveAndBuy = async (
@@ -33,7 +27,8 @@ export default function useCreateTransaction() {
     price: string,
     setCreateTransactionSeccessful: Dispatch<SetStateAction<boolean>>
   ) => {
-    const { sufficient } = await checkAllowance(parseUnits(price, decimals));
+    const allowanceAmount = parseUnits(price, decimals);
+    const { sufficient } = await checkAllowance(allowanceAmount);
 
     const createTransaction = async () => {
       try {
@@ -43,22 +38,21 @@ export default function useCreateTransaction() {
           args: [productId, quantity, metadataCID],
         });
         setCreateTransactionSeccessful(true);
-      } catch (_) {
+      } catch {
         setCreateTransactionSeccessful(false);
       }
     };
 
     if (!sufficient) {
-      // 1️⃣ Approve MNEE
       await writeContractAsync({
         ...MNEEContractConfig,
         functionName: "approve",
-        args: [MarketplaceContractConfig.address, parseUnits(price, decimals)],
+        args: [MarketplaceContractConfig.address, allowanceAmount],
       });
-      // 2️⃣ Create Transaction
+
       enqueue(createTransaction);
     } else {
-      createTransaction();
+      await createTransaction();
     }
   };
 

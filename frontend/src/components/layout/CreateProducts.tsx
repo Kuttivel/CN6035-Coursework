@@ -33,12 +33,13 @@ export default function CreateProduct({
   }, []);
 
   useEffect(() => {
-    if (submitting === false) return;
+    if (!submitting) return;
 
     if (createProductSeccessful) {
       toast.success("Product listed successfully!", {
         id: "create-product",
       });
+      setOpenListingForm(false);
     } else {
       toast.error("Blockchain Listing failed", {
         id: "create-product",
@@ -46,9 +47,8 @@ export default function CreateProduct({
     }
 
     setSubmitting(false);
-    setOpenListingForm(false);
     setCreateProductSeccessful(false);
-  }, [createProductSeccessful]);
+  }, [createProductSeccessful, setOpenListingForm, submitting]);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
