@@ -9,19 +9,28 @@ export function listenToEvents(fastify) {
     console.log("ProductCreated event detected:", { productId, seller, uri });
 
     try {
+      const normalizedSeller = seller.toLowerCase();
+
       const product = await Product.findOneAndUpdate(
-        { productId: productId.toString() },
+        {
+          seller: normalizedSeller,
+          imageCid: uri,
+          active: false,
+        },
         {
           active: true,
-          seller: seller.toLowerCase(),
-          imageCid: uri,
+          seller: normalizedSeller,
+          productId: productId.toString(),
         },
-        { new: true }
+        {
+          new: true,
+          sort: { createdAt: -1 },
+        }
       );
 
       if (!product) {
         fastify.log.error(
-          `ProductCreated sync failed: no product found for productId ${productId.toString()}`
+          `ProductCreated sync failed: no pending product found for seller ${normalizedSeller} and imageCid ${uri}`
         );
         return;
       }
@@ -45,32 +54,33 @@ export function listenToEvents(fastify) {
     console.log("ProductPurchased event detected:", { productId, txnId, uri });
 
     try {
-      const product = await Product.findOne({
-        productId: productId.toString(),
-      });
-
-      if (!product) {
-        fastify.log.error(
-          `ProductPurchased sync failed: no product found for productId ${productId.toString()}`
-        );
-        return;
-      }
-
       const transaction = await Transaction.findOneAndUpdate(
         {
-          product: product._id,
           detailsCid: uri,
+          success: false,
         },
         {
           transactionId: txnId.toString(),
           success: true,
         },
-        { new: true }
+        {
+          new: true,
+          sort: { createdAt: -1 },
+        }
       ).populate("product");
 
       if (!transaction) {
         fastify.log.error(
-          `ProductPurchased sync failed: no transaction found for productId ${productId.toString()} and detailsCid ${uri}`
+          `ProductPurchased sync failed: no pending transaction found for detailsCid ${uri}`
+        );
+        return;
+      }
+
+      const product = transaction.product;
+
+      if (!product) {
+        fastify.log.error(
+          `ProductPurchased sync failed: no populated product found for transaction ${txnId.toString()}`
         );
         return;
       }
@@ -212,6 +222,9 @@ export function listenToEvents(fastify) {
         );
         return;
       }
+
+      transaction.status = buyerWon ? "refunded" : "completed";
+      await transaction.save();
 
       try {
         await mailservice.sendBuyerDisputeResolvedMail(

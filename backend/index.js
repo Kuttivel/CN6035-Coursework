@@ -7,6 +7,7 @@ import mongoosePlugin from "./plugins/mongoose.plugin.js";
 import ethersPlugin from "./plugins/ethers.plugin.js";
 import productRoutes from "./routes/productsRoute.js";
 import transactionRoute from "./routes/transactionRoute.js";
+import analyticsRoute from "./routes/analyticsRoute.js";
 import Product from "./models/product.js";
 import mailerPlugin from "./plugins/mailer.plugin.js";
 import redisPlugin from "./plugins/redis.plugin.js";
@@ -61,6 +62,7 @@ fastify.register(ethersPlugin, {
 
 fastify.register(productRoutes);
 fastify.register(transactionRoute);
+fastify.register(analyticsRoute);
 
 fastify.get("/health", async () => {
   return { status: "ok" };
