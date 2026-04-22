@@ -107,7 +107,9 @@ export default async function transactionRoute(fastify) {
         return reply.send({ success: true, transaction: updatedTransaction });
       } catch (err) {
         request.log.error(err);
-        return reply.status(500).send({ message: "Failed to update transaction" });
+        return reply
+          .status(500)
+          .send({ message: "Failed to update transaction" });
       }
     }
   );
@@ -232,7 +234,9 @@ export default async function transactionRoute(fastify) {
         });
       } catch (err) {
         request.log.error(err);
-        return reply.status(500).send({ message: "Failed to delete transaction" });
+        return reply
+          .status(500)
+          .send({ message: "Failed to delete transaction" });
       }
     }
   );

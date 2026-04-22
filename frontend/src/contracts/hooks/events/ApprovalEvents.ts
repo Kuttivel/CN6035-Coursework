@@ -3,9 +3,7 @@ import { MNEEContractConfig } from "../../mnee";
 import { useTaskQueue } from "../../../store/useTaskQueue";
 import { MarketplaceContractConfig } from "../../marketPlace";
 
-export function useWatchTokenApproval(
-  address?: `0x${string}`,
-) {
+export function useWatchTokenApproval(address?: `0x${string}`) {
   const { dequeueAndRun } = useTaskQueue();
 
   useWatchContractEvent({
@@ -17,7 +15,7 @@ export function useWatchTokenApproval(
     },
     enabled: Boolean(address),
     onLogs(logs) {
-      console.log("Transactions approved")
+      console.log("Transactions approved");
       console.log(logs);
       dequeueAndRun();
     },

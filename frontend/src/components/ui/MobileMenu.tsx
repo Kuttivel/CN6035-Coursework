@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import { AccountConnectButton } from "../ui/ConnectButton";
 
-
 export default function MobileMenu({
   open,
   onClose,

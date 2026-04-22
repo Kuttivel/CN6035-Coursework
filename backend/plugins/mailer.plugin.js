@@ -2,7 +2,6 @@ import fp from "fastify-plugin";
 import MailService from "../services/mailService.js";
 import { createTransport } from "nodemailer";
 
-
 const mailerPlugin = fp(async (fastify) => {
   const transporter = createTransport({
     host: process.env.MAIL_HOST,
@@ -17,7 +16,7 @@ const mailerPlugin = fp(async (fastify) => {
     },
   });
 
-  fastify.decorate("mailservice", (new MailService(transporter, "RowMart")));
-})
+  fastify.decorate("mailservice", new MailService(transporter, "RowMart"));
+});
 
 export default mailerPlugin;

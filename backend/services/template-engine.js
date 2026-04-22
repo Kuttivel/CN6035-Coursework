@@ -41,9 +41,7 @@ export class TemplateEngine {
 
   static interpolate(template, data) {
     return template.replace(/{{\s*([^}\s]+)\s*}}/g, (_, key) => {
-      return key
-        .split(".")
-        .reduce((obj, prop) => obj?.[prop], data) ?? "";
+      return key.split(".").reduce((obj, prop) => obj?.[prop], data) ?? "";
     });
   }
 }

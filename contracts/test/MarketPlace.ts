@@ -71,9 +71,8 @@ describe("Marketplace (UUPS)", function () {
     //////////////////////////////////////////////////////////////*/
 
   it("initializes correctly", async () => {
-    const { marketplace, feeRecipient, arbitrator } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, feeRecipient, arbitrator } =
+      await loadFixture(deployFixture);
 
     expect(await marketplace.platformFeeBps()).to.equal(300);
     expect(await marketplace.feeRecipient()).to.equal(feeRecipient.address);
@@ -110,9 +109,9 @@ describe("Marketplace (UUPS)", function () {
   it("non-owner cannot update platform fee", async () => {
     const { marketplace, buyer } = await loadFixture(deployFixture);
 
-    await expect(
-      marketplace.connect(buyer).setPlatformFee(400)
-    ).to.be.revert(ethers);
+    await expect(marketplace.connect(buyer).setPlatformFee(400)).to.be.revert(
+      ethers
+    );
   });
 
   it("owner can update product creation fee", async () => {
@@ -195,9 +194,8 @@ describe("Marketplace (UUPS)", function () {
   });
 
   it("non-seller cannot update product price", async () => {
-    const { marketplace, seller, buyer, Token } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token } =
+      await loadFixture(deployFixture);
 
     await createProduct(Token, marketplace, seller);
 
@@ -220,9 +218,8 @@ describe("Marketplace (UUPS)", function () {
   });
 
   it("only seller can update product status", async () => {
-    const { marketplace, seller, buyer, Token } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token } =
+      await loadFixture(deployFixture);
 
     await createProduct(Token, marketplace, seller);
 
@@ -236,9 +233,8 @@ describe("Marketplace (UUPS)", function () {
   //////////////////////////////////////////////////////////////*/
 
   it("buyer can purchase product", async () => {
-    const { marketplace, seller, buyer, Token } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token } =
+      await loadFixture(deployFixture);
 
     const quantity = 5;
     const uri = "ipfs://metadata";
@@ -311,9 +307,8 @@ describe("Marketplace (UUPS)", function () {
   //   //////////////////////////////////////////////////////////////*/
 
   it("seller can cancel transaction and refund buyer", async () => {
-    const { marketplace, seller, buyer, Token } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token } =
+      await loadFixture(deployFixture);
 
     const quantity = 2;
 
@@ -344,9 +339,8 @@ describe("Marketplace (UUPS)", function () {
   //   //////////////////////////////////////////////////////////////*/
 
   it("buyer can open dispute and arbitrator resolves in buyer favor", async () => {
-    const { marketplace, seller, buyer, Token, arbitrator } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token, arbitrator } =
+      await loadFixture(deployFixture);
 
     await createProduct(Token, marketplace, seller);
 
@@ -371,9 +365,8 @@ describe("Marketplace (UUPS)", function () {
   //   //////////////////////////////////////////////////////////////*/
 
   it("buyer can submit review after purchase", async () => {
-    const { marketplace, seller, buyer, Token } = await loadFixture(
-      deployFixture
-    );
+    const { marketplace, seller, buyer, Token } =
+      await loadFixture(deployFixture);
 
     await createProduct(Token, marketplace, seller);
 

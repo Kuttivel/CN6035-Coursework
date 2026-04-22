@@ -208,8 +208,9 @@ export default async function productRoutes(fastify) {
       try {
         const { productId, id } = request.query;
 
-        const result = await Product.findOne(id ? { _id: id } : { productId })
-          .populate("reviews");
+        const result = await Product.findOne(
+          id ? { _id: id } : { productId }
+        ).populate("reviews");
 
         return reply.send({ success: true, product: result });
       } catch (err) {

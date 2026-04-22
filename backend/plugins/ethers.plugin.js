@@ -20,10 +20,7 @@ const ethersPlugin = fp(async function (fastify, opts) {
 
     await provider.getBlockNumber();
 
-    const contract = new Contract(
-      ...MarketplaceContractConfig,
-      provider
-    );
+    const contract = new Contract(...MarketplaceContractConfig, provider);
 
     fastify.decorate("ethers", { provider, contract });
 

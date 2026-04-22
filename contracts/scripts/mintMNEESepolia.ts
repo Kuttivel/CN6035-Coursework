@@ -26,7 +26,6 @@ const Token = new ethers.Contract(
   deployer
 );
 
-
 // --- 5. Mint tokens ---
 for (const address of buyers) {
   const balanceBefore = await Token.balanceOf(address);

@@ -19,11 +19,7 @@ export function useWatchTokenTransfers(
           to: `0x${string}`;
         };
 
-
-        if (
-          isAddressEqual(from, address) ||
-          isAddressEqual(to, address)
-        ) {
+        if (isAddressEqual(from, address) || isAddressEqual(to, address)) {
           onChange?.();
           break;
         }

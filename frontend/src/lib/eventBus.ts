@@ -31,6 +31,4 @@ export default class EventBus<Events extends Record<string, any>> {
   }
 }
 
-
-
 export const eventBus = new EventBus<AppEvents>();

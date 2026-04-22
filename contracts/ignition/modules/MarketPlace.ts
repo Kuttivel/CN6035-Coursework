@@ -21,11 +21,7 @@ const MarketplaceModule = buildModule("MarketplaceModule", (m) => {
   const marketplace = m.contract("Marketplace");
 
   // Initialize Marketplace
-  m.call(marketplace, "initialize", [
-    token,
-    deployer,
-    deployer,
-  ]);
+  m.call(marketplace, "initialize", [token, deployer, deployer]);
 
   return {
     token,

@@ -1,11 +1,13 @@
 npm i# Marketplace Contract - Full Stack Web Actions Guide
 
 ## Contract Overview
+
 The Marketplace is an upgradeable ERC20-based escrow platform where sellers create products and buyers purchase them with MNEE tokens. It includes dispute resolution, escrow management, and review systems.
 
 ---
 
 ## 📋 TABLE OF CONTENTS
+
 1. [Admin Actions](#admin-actions)
 2. [Seller Actions](#seller-actions)
 3. [Buyer Actions](#buyer-actions)
@@ -16,11 +18,13 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## 🔐 ADMIN ACTIONS
-*Only contract owner can execute these*
+
+_Only contract owner can execute these_
 
 ### 1. Set Platform Fee
+
 - **Function**: `setPlatformFee(uint96 newfeeBps)`
-- **Parameters**: 
+- **Parameters**:
   - `newfeeBps`: Platform fee in basis points (200-500, representing 2%-5%)
 - **Purpose**: Update the commission percentage the platform takes from completed sales
 - **Web Integration**: Admin dashboard → Fee Management
@@ -28,6 +32,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Validation**: Fee must be between 2% and 5%
 
 ### 2. Set Product Creation Fee
+
 - **Function**: `setCreateProductFee(uint256 newFee)`
 - **Parameters**:
   - `newFee`: New creation fee in wei (1e16 - 1000e18 range)
@@ -37,6 +42,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Validation**: Fee between 0.01 and 1000 MNEE tokens
 
 ### 3. Set Fee Recipient Address
+
 - **Function**: `setFeeRecipient(address recipient)`
 - **Parameters**:
   - `recipient`: Wallet address to receive platform fees
@@ -46,6 +52,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Validation**: Valid non-zero address required
 
 ### 4. Set Arbitrator Address
+
 - **Function**: `setArbitrator(address _arbitrator)`
 - **Parameters**:
   - `_arbitrator`: Wallet address with dispute resolution authority
@@ -55,6 +62,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Validation**: Valid non-zero address required
 
 ### 5. Authorize Upgrade
+
 - **Function**: `_authorizeUpgrade(address)`
 - **Parameters**:
   - Address of new implementation contract
@@ -66,21 +74,23 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## 🏪 SELLER ACTIONS
-*Actions sellers perform to manage products and sales*
+
+_Actions sellers perform to manage products and sales_
 
 ### 1. Create Product
+
 - **Function**: `createProduct(uint96 price, string calldata uri)`
 - **Parameters**:
   - `price`: Product price in MNEE tokens (as uint96)
   - `uri`: IPFS/metadata URL pointing to product details
 - **Purpose**: List a new product on the marketplace
 - **Cost**: Requires payment of `createProductFee` in MNEE tokens
-- **Web Integration**: 
+- **Web Integration**:
   - Seller Dashboard → New Product Form
   - Upload product details (name, description, images)
   - Store metadata on IPFS
   - Call contract function with metadata URI
-- **Frontend Components**: 
+- **Frontend Components**:
   - Product creation form
   - IPFS uploader
   - Price input validation
@@ -88,13 +98,14 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Returns**: Product ID (uint256)
 
 ### 2. Update Product Price
+
 - **Function**: `setProductPrice(uint256 productId, uint96 price)`
 - **Parameters**:
   - `productId`: ID of the product to update
   - `price`: New price in MNEE tokens
 - **Purpose**: Change the price of an active product
 - **Permissions**: Only the product seller can execute
-- **Web Integration**: 
+- **Web Integration**:
   - Seller Dashboard → Product Management
   - Product detail page → Edit Price button
 - **Frontend Components**:
@@ -105,6 +116,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Events Emitted**: `ProductPriceUpdated(productId, price)`
 
 ### 3. Update Product Status (Activate/Deactivate)
+
 - **Function**: `setProductStatus(uint256 productId, bool active)`
 - **Parameters**:
   - `productId`: ID of the product
@@ -122,6 +134,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Events Emitted**: `ProductStatusUpdated(productId, active)`
 
 ### 4. Confirm Delivery / Complete Sale
+
 - **Function**: `confirmDelivery(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to confirm
@@ -139,6 +152,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Side Effects**: Platform fee deducted, remainder sent to seller
 
 ### 5. Cancel Transaction
+
 - **Function**: `cancelTransaction(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to cancel
@@ -156,6 +170,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Side Effects**: Full amount returned to buyer
 
 ### 6. Open Dispute (Seller's Perspective)
+
 - **Function**: `openDispute(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to dispute
@@ -174,9 +189,11 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## 🛒 BUYER ACTIONS
-*Actions buyers perform when purchasing and managing orders*
+
+_Actions buyers perform when purchasing and managing orders_
 
 ### 1. Buy Product
+
 - **Function**: `buyProduct(uint256 productId, uint8 quantity, string calldata uri)`
 - **Parameters**:
   - `productId`: ID of product to purchase
@@ -184,7 +201,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - `uri`: Metadata URI for the transaction (delivery details, etc.)
 - **Purpose**: Purchase a product and initiate escrow
 - **Cost**: `product.price × quantity` in MNEE tokens
-- **Requirements**: 
+- **Requirements**:
   - Product must be active
   - Buyer cannot be the seller
   - Sufficient token balance and allowance
@@ -201,7 +218,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Token approval modal
   - Purchase confirmation screen
   - Transaction receipt
-- **Validation**: 
+- **Validation**:
   - Valid product ID
   - Positive quantity
   - Non-empty metadata URI
@@ -210,6 +227,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Side Effects**: Tokens transferred to contract (escrow), purchase flag set
 
 ### 2. Confirm Delivery / Complete Purchase
+
 - **Function**: `confirmDelivery(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to confirm
@@ -227,6 +245,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Side Effects**: Seller receives payout after platform fee deduction
 
 ### 3. Cancel Transaction (Request Refund)
+
 - **Function**: `cancelTransaction(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to cancel
@@ -242,6 +261,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Conditions**: Transaction must be in Pending status
 
 ### 4. Open Dispute
+
 - **Function**: `openDispute(uint256 txnId)`
 - **Parameters**:
   - `txnId`: Transaction ID to dispute
@@ -262,6 +282,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 - **Timeline**: Buyer can dispute if seller doesn't confirm delivery
 
 ### 5. Submit Review
+
 - **Function**: `submitReview(uint256 productId, uint8 rating, string calldata comment)`
 - **Parameters**:
   - `productId`: ID of purchased product
@@ -290,9 +311,11 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## ⚖️ ARBITRATOR ACTIONS
-*Actions the assigned arbitrator performs to resolve disputes*
+
+_Actions the assigned arbitrator performs to resolve disputes_
 
 ### 1. Resolve Dispute
+
 - **Function**: `resolveDispute(uint256 txnId, bool buyerWins)`
 - **Parameters**:
   - `txnId`: Transaction ID under dispute
@@ -323,9 +346,11 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## 👁️ READ-ONLY ACTIONS (QUERIES)
-*Data retrieval functions for frontend display*
+
+_Data retrieval functions for frontend display_
 
 ### 1. Get Average Rating
+
 - **Function**: `getAverageRating(uint256 productId) → uint256`
 - **Purpose**: Retrieve average star rating for a product
 - **Returns**: Average rating × 100 (e.g., 450 = 4.5 stars)
@@ -339,6 +364,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Filter by rating slider
 
 ### 2. View Product Details
+
 - **Function**: `products(uint256 productId) → (address seller, uint96 price, bool active, string metadataURI)`
 - **Purpose**: Retrieve full product information
 - **Web Integration**:
@@ -351,6 +377,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Metadata retrieval from IPFS
 
 ### 3. View Transaction Details
+
 - **Function**: `transactions(uint256 txnId) → (address buyer, address seller, uint256 productId, uint8 quantity, uint256 amount, string metadataURI, TxStatus status)`
 - **Purpose**: Retrieve transaction information and status
 - **Web Integration**:
@@ -364,6 +391,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Payment breakdown display
 
 ### 4. Check Purchase History
+
 - **Function**: `hasPurchased(uint256 productId, address user) → bool`
 - **Purpose**: Check if user has purchased a product (eligibility for review)
 - **Web Integration**:
@@ -374,6 +402,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - "Write a Review" button visibility
 
 ### 5. View User Review
+
 - **Function**: `reviews(uint256 productId, address reviewer) → (uint8 rating, string comment)`
 - **Purpose**: Retrieve specific review by user
 - **Web Integration**:
@@ -384,6 +413,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - User review history
 
 ### 6. Get Product Count
+
 - **Function**: `productCount → uint256`
 - **Purpose**: Total number of products in marketplace
 - **Web Integration**:
@@ -393,6 +423,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Stats/metrics dashboard
 
 ### 7. Get Transaction Count
+
 - **Function**: `transactionCount → uint256`
 - **Purpose**: Total number of transactions
 - **Web Integration**:
@@ -402,7 +433,8 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Stats/metrics dashboard
 
 ### 8. View Contract Settings
-- **Function**: 
+
+- **Function**:
   - `mneeToken → IERC20` (Token address)
   - `feeRecipient → address` (Fee wallet)
   - `arbitrator → address` (Arbitrator wallet)
@@ -420,9 +452,11 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ---
 
 ## 📡 EVENTS
-*Blockchain events to listen for real-time updates*
+
+_Blockchain events to listen for real-time updates_
 
 ### Product Events
+
 - **ProductCreated**: Triggered when new product listed
   - Params: `productId`, `seller`, `uri`
   - Use: Update product listings in real-time
@@ -436,6 +470,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Use: Update product availability status
 
 ### Transaction Events
+
 - **ProductPurchased**: Triggered when purchase completed
   - Params: `productId`, `txnId`, `uri`
   - Use: Notify seller of new order, update buyer's orders
@@ -449,6 +484,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Use: Notify buyer of refund, update status
 
 ### Dispute Events
+
 - **DisputeOpened**: Triggered when dispute created
   - Params: `txnId`
   - Use: Alert arbitrator, update transaction status
@@ -458,11 +494,13 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
   - Use: Notify both parties, update transaction status
 
 ### Review Events
+
 - **ReviewSubmitted**: Triggered when review posted
   - Params: `productId`, `reviewer`
   - Use: Update product ratings, notify seller
 
 ### Admin Events
+
 - **PlatformFeeUpdated**: Triggered when platform fee changes
   - Params: `oldFeeBps`, `newfeeBps`
   - Use: Alert users of fee change
@@ -484,6 +522,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ## 🔄 USER FLOW DIAGRAMS
 
 ### Seller Flow
+
 ```
 1. Create Account
    ↓
@@ -500,6 +539,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ```
 
 ### Buyer Flow
+
 ```
 1. Create Account & Fund with MNEE
    ↓
@@ -516,6 +556,7 @@ The Marketplace is an upgradeable ERC20-based escrow platform where sellers crea
 ```
 
 ### Dispute Flow
+
 ```
 Transaction Pending
    ↓
@@ -536,11 +577,13 @@ If seller wins: Seller gets payment after fee
 ## 💰 FINANCIAL FLOWS
 
 ### Product Creation Fee
+
 - Seller pays `createProductFee` in MNEE
 - Goes directly to contract/feeRecipient
 - One-time cost per product
 
 ### Purchase Flow
+
 ```
 Buyer sends: price × quantity
 ├── Held in escrow until delivery confirmed
@@ -552,6 +595,7 @@ Buyer sends: price × quantity
 ```
 
 ### Platform Fee
+
 - Default: 3% (300 bps)
 - Range: 2-5% (200-500 bps)
 - Deducted only on successful sales
@@ -573,6 +617,7 @@ Buyer sends: price × quantity
 ## 📝 IMPLEMENTATION CHECKLIST FOR FULL-STACK APP
 
 ### Backend (Node.js/Express)
+
 - [ ] Web3 integration (ethers.js)
 - [ ] IPFS client for metadata upload
 - [ ] Event listener for blockchain updates
@@ -582,6 +627,7 @@ Buyer sends: price × quantity
 - [ ] Email notifications (order updates, disputes)
 
 ### Frontend (React/Vue/Angular)
+
 - [ ] Wallet connection (MetaMask, WalletConnect, etc.)
 - [ ] Token approval flow
 - [ ] Product creation form with IPFS upload
@@ -593,6 +639,7 @@ Buyer sends: price × quantity
 - [ ] Real-time event listeners
 
 ### Database Models
+
 - [ ] Users (seller/buyer profiles)
 - [ ] Products (with IPFS metadata)
 - [ ] Transactions (with status tracking)
@@ -607,7 +654,7 @@ Buyer sends: price × quantity
 2. **Refund Path**: Purchase → Seller cancels → Buyer gets refund
 3. **Dispute Path**: Purchase → Buyer disputes → Arbitrator rules → Resolution
 4. **Admin Path**: Update fees → Update arbitrator → Verify settings
-5. **Edge Cases**: 
+5. **Edge Cases**:
    - Zero prices
    - Invalid addresses
    - Insufficient balance
@@ -616,5 +663,5 @@ Buyer sends: price × quantity
 
 ---
 
-*Last Updated: 2026*
-*Contract Version: Marketplace (UUPS Upgradeable)*
+_Last Updated: 2026_
+_Contract Version: Marketplace (UUPS Upgradeable)_

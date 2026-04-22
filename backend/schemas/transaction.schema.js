@@ -18,9 +18,8 @@ export const productProperties = {
   productId: { type: "string" },
 
   createdAt: { type: "string", format: "date-time" },
-  updatedAt: { type: "string", format: "date-time" }
+  updatedAt: { type: "string", format: "date-time" },
 };
-
 
 const transactionProperties = {
   _id: { type: "string" },
@@ -37,7 +36,7 @@ const transactionProperties = {
   seller: { type: "string" },
   transactionId: { type: "string" },
   createdAt: { type: "string" },
-  updatedAt: { type: "string" }
+  updatedAt: { type: "string" },
 };
 
 /* -----------------------------------------------------
@@ -46,15 +45,22 @@ const transactionProperties = {
 export const createTransactionSchema = {
   body: {
     type: "object",
-    required: ["buyer", "seller", "buyerEmail", "productId", "quantity", "price"],
+    required: [
+      "buyer",
+      "seller",
+      "buyerEmail",
+      "productId",
+      "quantity",
+      "price",
+    ],
     properties: {
       buyer: { type: "string" },
       seller: { type: "string" },
       buyerEmail: { type: "string" },
       productId: { type: "string" },
       quantity: { type: "integer", minimum: 1 },
-      price: { type: "number" }
-    }
+      price: { type: "number" },
+    },
   },
   response: {
     200: {
@@ -64,11 +70,11 @@ export const createTransactionSchema = {
         success: { type: "boolean" },
         transaction: {
           type: "object",
-          properties: transactionProperties
-        }
-      }
-    }
-  }
+          properties: transactionProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -81,8 +87,11 @@ export const updateTransactionSchema = {
     additionalProperties: false,
     properties: {
       id: { type: "string" },
-      status: { type: "string", enum: ["pending", "disputed", "completed", "refunded"] }
-    }
+      status: {
+        type: "string",
+        enum: ["pending", "disputed", "completed", "refunded"],
+      },
+    },
   },
   response: {
     200: {
@@ -92,11 +101,11 @@ export const updateTransactionSchema = {
         success: { type: "boolean" },
         transaction: {
           type: "object",
-          properties: transactionProperties
-        }
-      }
-    }
-  }
+          properties: transactionProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -105,14 +114,17 @@ export const updateTransactionSchema = {
 export const getTransactionsSchema = {
   querystring: {
     type: "object",
-    required: ['address'],
+    required: ["address"],
     properties: {
       page: { type: "integer", minimum: 1, default: 1 },
       limit: { type: "integer", minimum: 1, maximum: 100, default: 10 },
-      status: { type: "string", enum: ["pending", "disputed", "completed", "refunded"] },
+      status: {
+        type: "string",
+        enum: ["pending", "disputed", "completed", "refunded"],
+      },
       isSeller: { type: "boolean" },
-      success: { type: "boolean", default: true }
-    }
+      success: { type: "boolean", default: true },
+    },
   },
   response: {
     200: {
@@ -126,19 +138,19 @@ export const getTransactionsSchema = {
             total: { type: "integer" },
             page: { type: "integer" },
             limit: { type: "integer" },
-            totalPages: { type: "integer" }
-          }
+            totalPages: { type: "integer" },
+          },
         },
         transactions: {
           type: "array",
           items: {
             type: "object",
-            properties: transactionProperties
-          }
-        }
-      }
-    }
-  }
+            properties: transactionProperties,
+          },
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -147,14 +159,11 @@ export const getTransactionsSchema = {
 export const getTransactionSchema = {
   querystring: {
     type: "object",
-    oneOf: [
-      { required: ["id"] },
-      { required: ["transactionId"] }
-    ],
+    oneOf: [{ required: ["id"] }, { required: ["transactionId"] }],
     properties: {
       id: { type: "string" },
-      transactionId: { type: "string" }
-    }
+      transactionId: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -164,11 +173,11 @@ export const getTransactionSchema = {
         success: { type: "boolean" },
         data: {
           type: ["object", "null"],
-          properties: transactionProperties
-        }
-      }
-    }
-  }
+          properties: transactionProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -179,8 +188,8 @@ export const deleteTransactionSchema = {
     type: "object",
     required: ["id"],
     properties: {
-      id: { type: "string" }
-    }
+      id: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -188,8 +197,8 @@ export const deleteTransactionSchema = {
       required: ["success", "message"],
       properties: {
         success: { type: "boolean" },
-        message: { type: "string" }
-      }
-    }
-  }
+        message: { type: "string" },
+      },
+    },
+  },
 };

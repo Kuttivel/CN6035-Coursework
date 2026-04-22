@@ -1,7 +1,4 @@
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { MarketplaceContractConfig } from "../marketPlace";
 
 export default function useCreateReview() {

@@ -39,9 +39,7 @@ export default function useCreateProduct() {
     setCreateProductSeccessful: Dispatch<SetStateAction<boolean>>
   ) => {
     if (!createProductFee) throw new Error("Fee not loaded");
-    const { sufficient } = await checkAllowance(
-      createProductFee ?? BigInt(0)
-    );
+    const { sufficient } = await checkAllowance(createProductFee ?? BigInt(0));
 
     const createProduct = async () => {
       try {

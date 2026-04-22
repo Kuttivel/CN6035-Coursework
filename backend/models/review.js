@@ -1,32 +1,32 @@
 import { model, Schema } from "mongoose";
 
 const reviewSchema = new Schema(
-    {
-        product: {
-            type: Schema.Types.ObjectId,
-            ref: "Product",
-            required: true,
-            index: true,
-        },
-        reviewer: {
-            type: String,
-            required: true,
-            index: true,
-        },
-        rating: {
-            type: Number,
-            required: true,
-            min: 1,
-            max: 5,
-        },
-        comment: {
-            type: String,
-            trim: true,
-            maxlength: 500,
-            required: true,
-        },
+  {
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+      index: true,
     },
-    { timestamps: true }
+    reviewer: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      required: true,
+    },
+  },
+  { timestamps: true }
 );
 
 /**

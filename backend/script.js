@@ -4,15 +4,17 @@ import mongoose from "mongoose";
 // import { MarketplaceContractConfig } from "./contract/marketPlace.js";
 import Product from "./models/product.js";
 import Transaction from "./models/transaction.js";
-import "dotenv/config"
+import "dotenv/config";
 
 import { createTransport } from "nodemailer";
 import MailService from "./services/mailService.js";
 
-mongoose.connect(process.env.MONGO_URI, {
+mongoose
+  .connect(process.env.MONGO_URI, {
     autoIndex: false,
     maxPoolSize: 10,
-}).then(async () => {
+  })
+  .then(async () => {
     // const provider = new JsonRpcProvider();
 
     // const contract = new Contract(
@@ -20,9 +22,9 @@ mongoose.connect(process.env.MONGO_URI, {
     //     provider
     // );
 
-    const transactions = await Transaction.findOne({ transactionId: 1});
+    const transactions = await Transaction.findOne({ transactionId: 1 });
 
-    console.log(transactions)
+    console.log(transactions);
     // transactions.forEach(async (transaction) => {
     //     try {
     // const onChainTransaction = await contract.transactions(transaction.transactionId);
@@ -35,24 +37,23 @@ mongoose.connect(process.env.MONGO_URI, {
     // const products = await Product.find({});
 
     // products.forEach(async (product) => {
-        // console.log(product);
-        //     try {
-        //         const onChainProduct = await contract.products(product.productId);
-        //         const sellerAddress = onChainProduct.seller;
-        //         product.seller = sellerAddress;
-        //         await product.save();
-        //         console.log(`Updated product ${product.productId} with seller ${sellerAddress}`);
-        //     } catch (err) {
-        //         console.error(`Failed to update product ${product.productId}:`, err);
-        //     }
+    // console.log(product);
+    //     try {
+    //         const onChainProduct = await contract.products(product.productId);
+    //         const sellerAddress = onChainProduct.seller;
+    //         product.seller = sellerAddress;
+    //         await product.save();
+    //         console.log(`Updated product ${product.productId} with seller ${sellerAddress}`);
+    //     } catch (err) {
+    //         console.error(`Failed to update product ${product.productId}:`, err);
+    //     }
 
-        // process.exit(0);
+    // process.exit(0);
     // });
-
-}).catch((err) => {
+  })
+  .catch((err) => {
     process.exit(1);
-});
-
+  });
 
 const res = await fetch("https://rowmart.onrender.com/send-mail");
 const data = await res.json();

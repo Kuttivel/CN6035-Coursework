@@ -2,7 +2,7 @@
 export const review = {
   reviewer: { type: "string" },
   rating: { type: "number", minimum: 1, maximum: 5 },
-  comment: { type: "string", minLength: 1 }
+  comment: { type: "string", minLength: 1 },
 };
 
 export const productProperties = {
@@ -21,8 +21,8 @@ export const productProperties = {
     items: {
       type: "object",
       properties: review,
-      required: ["reviewer", "rating", "comment"]
-    }
+      required: ["reviewer", "rating", "comment"],
+    },
   },
 
   ratingCount: { type: "integer", minimum: 0 },
@@ -32,7 +32,7 @@ export const productProperties = {
   productId: { type: "string" },
 
   createdAt: { type: "string", format: "date-time" },
-  updatedAt: { type: "string", format: "date-time" }
+  updatedAt: { type: "string", format: "date-time" },
 };
 
 /* -----------------------------------------------------
@@ -53,10 +53,10 @@ export const createProductSchema = {
         type: "object",
         properties: {
           buffer: { type: "object" },
-          metadata: { type: "object" }
-        }
-      }
-    }
+          metadata: { type: "object" },
+        },
+      },
+    },
   },
   response: {
     200: {
@@ -66,11 +66,11 @@ export const createProductSchema = {
         success: { type: "boolean" },
         product: {
           type: "object",
-          properties: productProperties
-        }
-      }
-    }
-  }
+          properties: productProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -86,8 +86,8 @@ export const updateProductSchema = {
       name: { type: "string" },
       email: { type: "string", format: "email" },
       price: { type: "string" },
-      description: { type: "string" }
-    }
+      description: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -97,11 +97,11 @@ export const updateProductSchema = {
         success: { type: "boolean" },
         product: {
           type: "object",
-          properties: productProperties
-        }
-      }
-    }
-  }
+          properties: productProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -113,8 +113,8 @@ export const getProductsSchema = {
     properties: {
       page: { type: "integer", minimum: 1, default: 1 },
       limit: { type: "integer", minimum: 1, maximum: 100, default: 12 },
-      search: { type: "string" }
-    }
+      search: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -128,19 +128,19 @@ export const getProductsSchema = {
             total: { type: "integer" },
             page: { type: "integer" },
             limit: { type: "integer" },
-            totalPages: { type: "integer" }
-          }
+            totalPages: { type: "integer" },
+          },
         },
         products: {
           type: "array",
           items: {
             type: "object",
-            properties: productProperties
-          }
-        }
-      }
-    }
-  }
+            properties: productProperties,
+          },
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -149,14 +149,11 @@ export const getProductsSchema = {
 export const getProductSchema = {
   querystring: {
     type: "object",
-    oneOf: [
-      { required: ["id"] },
-      { required: ["productId"] }
-    ],
+    oneOf: [{ required: ["id"] }, { required: ["productId"] }],
     properties: {
       id: { type: "string" },
-      productId: { type: "string" }
-    }
+      productId: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -166,11 +163,11 @@ export const getProductSchema = {
         success: { type: "boolean" },
         product: {
           type: ["object", "null"],
-          properties: productProperties
-        }
-      }
-    }
-  }
+          properties: productProperties,
+        },
+      },
+    },
+  },
 };
 
 /* -----------------------------------------------------
@@ -181,8 +178,8 @@ export const deleteProductSchema = {
     type: "object",
     required: ["id"],
     properties: {
-      id: { type: "string" }
-    }
+      id: { type: "string" },
+    },
   },
   response: {
     200: {
@@ -190,12 +187,11 @@ export const deleteProductSchema = {
       required: ["success", "message"],
       properties: {
         success: { type: "boolean" },
-        message: { type: "string" }
-      }
-    }
-  }
+        message: { type: "string" },
+      },
+    },
+  },
 };
-
 
 /* -----------------------------------------------------
    RATE PRODUCT
@@ -240,7 +236,7 @@ export const rateProductSchema = {
         success: { type: "boolean" },
         product: {
           type: "object",
-          properties: productProperties
+          properties: productProperties,
         },
       },
     },

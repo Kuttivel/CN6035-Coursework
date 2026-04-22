@@ -33,9 +33,7 @@ export default function useCreateTransaction() {
     price: string,
     setCreateTransactionSeccessful: Dispatch<SetStateAction<boolean>>
   ) => {
-    const { sufficient } = await checkAllowance(
-      parseUnits(price, decimals)
-    );
+    const { sufficient } = await checkAllowance(parseUnits(price, decimals));
 
     const createTransaction = async () => {
       try {

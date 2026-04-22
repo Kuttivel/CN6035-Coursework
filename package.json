@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "contract:run": "cd ./contracts && npx hardhat node",
-    "contract:deploy": "cd ./contracts && npx hardhat ignition deploy ./ignition/modules/MarketPlace.ts --network localhost",
-    "contract:mint": "cd ./contracts && npx hardhat run ./scripts/mintMNEE.ts --network localhost",
-    "dev:server": "cd ./backend && npm run dev",
-    "dev:client": "cd ./frontend && npm run dev",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "contracts:node": "cd contracts && npm run node",
+    "contracts:deploy": "cd contracts && npm run deploy",
+    "contracts:mint": "cd contracts && npm run mint",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run dev",
     "server": "cd ./backend && npm start",
     "build": "cd ./frontend && npm run build"
   },
@@ -22,5 +27,14 @@
   "bugs": {
     "url": "https://github.com/GoldenThrust/rowmart/issues"
   },
-  "homepage": "https://github.com/GoldenThrust/rowmart#readme"
+  "homepage": "https://github.com/GoldenThrust/rowmart#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.0"
+  }
 }

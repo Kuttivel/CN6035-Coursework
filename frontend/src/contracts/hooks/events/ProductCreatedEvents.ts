@@ -7,7 +7,7 @@ export function useWatchProductCreated() {
     ...MarketplaceContractConfig,
     eventName: "ProductCreated",
     onLogs() {
-     eventBus.emit("FETCH_PRODUCTS", null);
+      eventBus.emit("FETCH_PRODUCTS", null);
     },
   });
 }

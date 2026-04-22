@@ -7,6 +7,7 @@ Rowmart is a decentralized Web3 marketplace that enables creators and sellers to
 Rowmart is designed to be secure, transparent, and creator-friendly, eliminating unnecessary intermediaries while still delivering a smooth and intuitive user experience.
 
 ## Table of Content
+
 - [ Rowmart](#-rowmart)
   - [Table of Content](#table-of-content)
   - [🌐 Live Demo \& Resources](#-live-demo--resources)
@@ -28,18 +29,17 @@ Rowmart is designed to be secure, transparent, and creator-friendly, eliminating
 [![Demo Website](https://img.shields.io/badge/Demo-Website-blue?style=for-the-badge)](https://rowmart.vercel.app)  
 [![Smart Contracts](https://img.shields.io/badge/Contracts-Sepolia%20Testnet-orange?style=for-the-badge)](http://sepolia.etherscan.io/address/0x92CA87E1C9b1FbcB18039FEd44Ab7c490AF9C844)  
 [![Smart Contracts](https://img.shields.io/badge/Contracts-MNEE%20MAINNET-springgreen?style=for-the-badge)](https://etherscan.io/address/0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF#code)  
-[![Smart Contracts](https://img.shields.io/badge/Contracts-MOCKMNEE%20TESTNET-orange?style=for-the-badge)](http://sepolia.etherscan.io/address/0x6247E28B65fFDd7e75823F0b580919dB8B01B0c6)  
+[![Smart Contracts](https://img.shields.io/badge/Contracts-MOCKMNEE%20TESTNET-orange?style=for-the-badge)](http://sepolia.etherscan.io/address/0x6247E28B65fFDd7e75823F0b580919dB8B01B0c6)
+
 <!-- [![YouTube Demo](https://img.shields.io/badge/Video-Demo-red?style=for-the-badge)](https://youtube.com/watch?v=YOUR_VIDEO_ID)   -->
 
 ⚠️ **Note:** This project is currently deployed on **testnet** for development and testing purposes. Refer to frontend [README](/frontend/README.md#-wallet-configuration) on how to get sepolia ETH and mockMNEE token.
 
-
 ## 🖼️ Preview
 
-| Homepage | Product Page | Buy Product| Orders & Escrow | 
-|----------|--------------|------------|----------------|
-| ![Homepage](/assets/preview/homepage.jpg) | ![Sell Product](/assets/preview/sell-product.jpg) | ![Orders](/assets/preview/buy-product.jpg) |![Orders](/assets/preview/orders.jpg) |
-
+| Homepage                                  | Product Page                                      | Buy Product                                | Orders & Escrow                       |
+| ----------------------------------------- | ------------------------------------------------- | ------------------------------------------ | ------------------------------------- |
+| ![Homepage](/assets/preview/homepage.jpg) | ![Sell Product](/assets/preview/sell-product.jpg) | ![Orders](/assets/preview/buy-product.jpg) | ![Orders](/assets/preview/orders.jpg) |
 
 <!-- ## 🎥 Video Demo
 
@@ -49,16 +49,17 @@ Rowmart is designed to be secure, transparent, and creator-friendly, eliminating
 
 ## 🧠 How Rowmart Works
 
-1. Sellers list products **on-chain**  
-2. Buyers purchase using their **wallet**  
-3. Funds are held securely via **smart contracts**  
-4. Backend synchronizes **blockchain events**  
-5. **Disputes** can be resolved transparently  
-6. Sellers receive **payouts** after successful completion  
+1. Sellers list products **on-chain**
+2. Buyers purchase using their **wallet**
+3. Funds are held securely via **smart contracts**
+4. Backend synchronizes **blockchain events**
+5. **Disputes** can be resolved transparently
+6. Sellers receive **payouts** after successful completion
 
 ---
 
 ## 🏗️ Project Architecture
+
 ```bash
 rowmart/
 ├── frontend/ # Web application (UI / UX)
@@ -67,28 +68,30 @@ rowmart/
 └── README.md
 ```
 
-
 ---
 
 ## 🧩 Core Components
 
 ### 🖥️ Frontend
-- Web3-enabled marketplace UI  
-- Wallet connection & transaction signing  
-- Product listings, orders, ratings, and reviews  
-- Built for speed and usability  
+
+- Web3-enabled marketplace UI
+- Wallet connection & transaction signing
+- Product listings, orders, ratings, and reviews
+- Built for speed and usability
 
 ### 🔗 Smart Contracts
-- Written in **Solidity** using Hardhat  
-- Handles:  
-  - Product creation  
-  - Purchasing & escrow  
-  - Order lifecycle  
+
+- Written in **Solidity** using Hardhat
+- Handles:
+  - Product creation
+  - Purchasing & escrow
+  - Order lifecycle
 
 ### ⚙️ Backend
-- Off-chain logic & API services  
-- Email notifications  
-- Improves performance and UX  
+
+- Off-chain logic & API services
+- Email notifications
+- Improves performance and UX
 
 ---
 
@@ -123,6 +126,7 @@ cd rowmart
 npm run dev:server
 npm run dev:client
 ```
+
 > Each folder contains its own setup instructions.
 
 ## 📚 Documentation

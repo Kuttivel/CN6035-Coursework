@@ -74,7 +74,7 @@ export const AccountConnectButton = ({
 
         return (
           <div
-          className="flex justify-center"
+            className="flex justify-center"
             {...(!ready && {
               "aria-hidden": true,
               style: {
@@ -152,7 +152,7 @@ export const AccountConnectButton = ({
                       <div
                         className="w-5 h-5 rounded-full overflow-hidden"
                         style={{
-                          backgroundColor: iconDetails.iconBackground
+                          backgroundColor: iconDetails.iconBackground,
                         }}
                       >
                         {iconDetails.icon && (
